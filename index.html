@@ -4,12 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URL Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        input[type="text"] {
+            padding: 10px;
+            margin: 5px 0;
+            width: 200px;
+        }
+        button {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: #fff;
+            margin: 5px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .error {
+            color: red;
+            margin: 10px 0;
+        }
+    </style>
     <script type="module">
-        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
         
-        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCFtCV9OP-oJqrzVaTqvuRkLD4GW2Hhhc0",
             authDomain: "sandsmoke-79dca.firebaseapp.com",
@@ -21,39 +60,64 @@
             measurementId: "G-C8FH5PFNEP"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
 
-        // Function to add URL to the database
-        window.addUrl = function() { // Make addUrl globally accessible
+        window.addUrl = function() {
             const urlInput = document.getElementById("urlInput").value;
-            const urlId = Date.now(); // Use timestamp as a unique ID
-            set(ref(database, 'urls/' + urlId), {
-                url: urlInput
-            }).then(() => {
-                document.getElementById("urlInput").value = '';
-            }).catch((error) => {
-                console.error("Error adding URL: ", error);
+            const nicknameInput = document.getElementById("nicknameInput").value;
+            const errorMessage = document.getElementById("errorMessage");
+
+            // エラーメッセージを初期化
+            errorMessage.textContent = '';
+
+            if (!urlInput || !nicknameInput) {
+                errorMessage.textContent = 'URLとニックネームを入力してください。';
+                return;
+            }
+
+            const urlId = Date.now();
+            const existingUrlsRef = ref(database, 'urls/');
+
+            onValue(existingUrlsRef, (snapshot) => {
+                let exists = false;
+                snapshot.forEach((childSnapshot) => {
+                    const data = childSnapshot.val();
+                    if (data.url === urlInput) {
+                        exists = true;
+                    }
+                });
+
+                if (exists) {
+                    errorMessage.textContent = 'このURLはすでに存在します。';
+                } else {
+                    set(ref(database, 'urls/' + urlId), {
+                        url: urlInput,
+                        nickname: nicknameInput
+                    }).then(() => {
+                        document.getElementById("urlInput").value = '';
+                        document.getElementById("nicknameInput").value = '';
+                    }).catch((error) => {
+                        console.error("Error adding URL: ", error);
+                    });
+                }
             });
         };
 
-        // Function to display URLs from the database
-        window.displayUrls = function() { // Make displayUrls globally accessible
+        window.displayUrls = function() {
             const urlsRef = ref(database, 'urls/');
             onValue(urlsRef, (snapshot) => {
                 const urlList = document.getElementById("urlList");
-                urlList.innerHTML = ''; // Clear current list
+                urlList.innerHTML = '';
                 snapshot.forEach((childSnapshot) => {
                     const data = childSnapshot.val();
                     const li = document.createElement("li");
-                    li.textContent = data.url;
+                    li.textContent = `${data.nickname}: ${data.url}`;
                     urlList.appendChild(li);
                 });
             });
         };
 
-        // Load URLs on page load
         window.onload = () => {
             displayUrls();
         };
@@ -61,8 +125,10 @@
 </head>
 <body>
     <h1>URL Manager</h1>
-    <input type="text" id="urlInput" placeholder="Enter URL" />
+    <input type="text" id="urlInput" placeholder="URLを入力" />
+    <input type="text" id="nicknameInput" placeholder="ニックネームを入力" />
     <button onclick="addUrl()">URLを追加</button>
+    <div class="error" id="errorMessage"></div>
     <h2>保存されたURLリスト:</h2>
     <ul id="urlList"></ul>
 </body>
