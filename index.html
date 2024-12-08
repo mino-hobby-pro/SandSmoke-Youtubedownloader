@@ -71,8 +71,14 @@
             // エラーメッセージを初期化
             errorMessage.textContent = '';
 
-            if (!urlInput || !nicknameInput) {
-                errorMessage.textContent = 'URLとニックネームを入力してください。';
+            // URLがhttps形式であるかチェック
+            if (!urlInput.startsWith('https://')) {
+                errorMessage.textContent = 'URLはhttps形式でなければなりません。';
+                return;
+            }
+
+            if (!nicknameInput) {
+                errorMessage.textContent = 'ニックネームを入力してください。';
                 return;
             }
 
