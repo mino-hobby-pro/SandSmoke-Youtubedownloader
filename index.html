@@ -26,7 +26,7 @@
         const database = getDatabase(app);
 
         // Function to add URL to the database
-        function addUrl() {
+        window.addUrl = function() { // Make addUrl globally accessible
             const urlInput = document.getElementById("urlInput").value;
             const urlId = Date.now(); // Use timestamp as a unique ID
             set(ref(database, 'urls/' + urlId), {
@@ -36,10 +36,10 @@
             }).catch((error) => {
                 console.error("Error adding URL: ", error);
             });
-        }
+        };
 
         // Function to display URLs from the database
-        function displayUrls() {
+        window.displayUrls = function() { // Make displayUrls globally accessible
             const urlsRef = ref(database, 'urls/');
             onValue(urlsRef, (snapshot) => {
                 const urlList = document.getElementById("urlList");
@@ -51,7 +51,7 @@
                     urlList.appendChild(li);
                 });
             });
-        }
+        };
 
         // Load URLs on page load
         window.onload = () => {
