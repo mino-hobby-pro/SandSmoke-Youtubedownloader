@@ -61,6 +61,10 @@ def getVideoData(videoid):
         ]
     ]
 
+@app.get("/")
+async def root():
+    return {"message": "This is an API for fetching video data. Use /video/{videoid} to get video information."}
+
 @app.get("/video/{videoid}")
 async def get_video(videoid: str):
     return getVideoData(videoid)
