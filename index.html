@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>動画URL抽出</title>
-    <script src="https://raw.githubusercontent.com/mino-hobby-pro/URL-sandsmoke/refs/heads/main/script.js" defer></script>
+    <title>動画URL取得アプリ</title>
+    <script src="fetchUrls.js" defer></script>
 </head>
 <body>
-    <h1>動画URL抽出</h1>
-    <div id="url-list"></div>
+    <h1>動画URL取得アプリ</h1>
+    <label for="videoId">動画IDを入力してください:</label>
+    <input type="text" id="videoId" />
+    <button id="fetchButton">URLを取得</button>
+    <h2>取得したURL:</h2>
+    <div id="result"></div>
 </body>
 </html>
