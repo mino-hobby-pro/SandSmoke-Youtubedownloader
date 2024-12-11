@@ -1,19 +1,21 @@
 {
-    "version": 2,
-    "builds": [
-        {
-            "src": "main.py",
-            "use": "@vercel/python"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/video",
-            "dest": "main.py"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "index.html"
-        }
-    ]
+  "version": 2,
+  "builds": [
+    {
+      "src": "main.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/video",
+      "methods": ["GET"],
+      "dest": "main.py"
+    },
+    {
+      "src": "/",
+      "methods": ["GET"],
+      "dest": "main.py"
+    }
+  ]
 }
