@@ -8,7 +8,10 @@ app = FastAPI()
 
 # Invidious API URLs
 requestAPI_urls = [
-'https://inv.nadeko.net/', 'https://inv.zzls.xyz/', 'https://invidious.nerdvpn.de/', 'https://youtube.privacyplz.org/'
+    'https://inv.nadeko.net/',
+    'https://inv.zzls.xyz/',
+    'https://invidious.nerdvpn.de/',
+    'https://youtube.privacyplz.org/'
 ]
 
 def requestAPI(endpoint):
@@ -34,35 +37,43 @@ def getVideoData(videoid):
             "lengthSeconds": 0,
             "viewCountText": "Load Failed"
         }]
+    
+    # Prepare the main video data
+    video_data = {
+        'video_urls': list(reversed([i["url"] for i in t["formatStreams"]]))[:2],
+        'description_html': t["descriptionHtml"].replace("\n", "<br>"),
+        'title': t["title"],
+        'length_text': str(datetime.timedelta(seconds=t["lengthSeconds"])),
+        'author_id': t["authorId"],
+        'author': t["author"],
+        'author_thumbnails_url': t["authorThumbnails"][-1]["url"],
+        'view_count': t["viewCount"],
+        'like_count': t["likeCount"],
+        'subscribers_count': t["subCountText"]
+    }
 
-    return [
+    # Prepare recommended videos data
+    recommended_videos_data = [
         {
-            'video_urls': list(reversed([i["url"] for i in t["formatStreams"]]))[:2],
-            'description_html': t["descriptionHtml"].replace("\n", "<br>"),
-            'title': t["title"],
-            'length_text': str(datetime.timedelta(seconds=t["lengthSeconds"])),
-            'author_id': t["authorId"],
-            'author': t["author"],
-            'author_thumbnails_url': t["authorThumbnails"][-1]["url"],
-            'view_count': t["viewCount"],
-            'like_count': t["likeCount"],
-            'subscribers_count': t["subCountText"]
-        },
-        [
-            {
-                "video_id": i["videoId"],
-                "title": i["title"],
-                "author_id": i["authorId"],
-                "author": i["author"],
-                "length_text": str(datetime.timedelta(seconds=i["lengthSeconds"])),
-                "view_count_text": i["viewCountText"]
-            } for i in recommended_videos
-        ]
+            "video_id": i["videoId"],
+            "title": i["title"],
+            "author_id": i["authorId"],
+            "author": i["author"],
+            "length_text": str(datetime.timedelta(seconds=i["lengthSeconds"])),
+            "view_count_text": i["viewCountText"]
+        } for i in recommended_videos
     ]
+    
+    return video_data, recommended_videos_data
 
 @app.get("/video/{videoid}")
 async def get_video(videoid: str):
-    return getVideoData(videoid)
+    video_data, recommended_videos_data = getVideoData(videoid)
+    
+    return {
+        "video_data": video_data,
+        "recommended_videos": recommended_videos_data
+    }
 
 @app.get("/")
 async def root():
