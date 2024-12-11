@@ -3,25 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>動画表示アプリ</title>
+    <title>動画URL抽出</title>
+    <script src="script.js" defer></script>
 </head>
 <body>
-    <h1>動画表示アプリ</h1>
-    <form id="videoForm">
-        <label for="videoId">動画ID:</label>
-        <input type="text" id="videoId" name="videoId" required>
-        <button type="submit">表示</button>
-    </form>
-    <div id="result"></div>
-
-    <script>
-        document.getElementById('videoForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const videoId = document.getElementById('videoId').value;
-            const response = await fetch(`/proxy/mino/${videoId}`);
-            const html = await response.text();
-            document.getElementById('result').innerHTML = html;
-        });
-    </script>
+    <h1>動画URL抽出</h1>
+    <div id="url-list"></div>
 </body>
 </html>
