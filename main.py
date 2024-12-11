@@ -61,13 +61,13 @@ def getVideoData(videoid):
         ]
     ]
 
-@app.get("/")
-async def root():
-    return {"message": "This is an API for fetching video data. Use /video/{videoid} to get video information."}
-
 @app.get("/video/{videoid}")
 async def get_video(videoid: str):
     return getVideoData(videoid)
+
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the Video API! Use the /video/{videoid} endpoint to fetch video details."}
 
 # uvicornを使ってアプリを実行
 if __name__ == "__main__":
