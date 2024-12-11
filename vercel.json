@@ -1,3 +1,4 @@
+{
   "version": 2,
   "builds": [
     {
@@ -7,13 +8,8 @@
   ],
   "routes": [
     {
-      "src": "/video",
-      "methods": ["GET"],
-      "dest": "main.py"
-    },
-    {
-      "src": "/",
-      "methods": ["GET"],
+      "src": "/(.*)",
       "dest": "main.py"
     }
   ]
+}
