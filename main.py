@@ -1,10 +1,9 @@
 import json
 import urllib.parse
-import datetime
+import time
 import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
-import time
 
 app = FastAPI()
 
@@ -18,43 +17,41 @@ video_apis = [
     r"https://script.google.com/macros/s/AKfycbxYjOWULjin5kpp-NcjjjGujVX3wy1TEJVUR2AZtR6-5c_q7GBr1Nctl2_Kat4lSboD/exec?videoId=",
 ]
 
-max_time = 20  # 最大待機時間の設定
-max_api_wait_time = 5  # APIリクエストの最大待機時間
+max_time = 20  # Maximum wait time for API requests
+max_api_wait_time = 5  # Maximum wait time for individual API requests
 
 class APItimeoutError(Exception):
     pass
 
-def is_json(myjson):
+def is_json(response_text):
     try:
-        json_object = json.loads(myjson)
+        json.loads(response_text)
+        return True
     except ValueError:
         return False
-    return True
 
-# APIリクエスト関数
-def apirequest_video(url):
-    global video_apis
-    starttime = time.time()
-    for api in video_apis:
-        if time.time() - starttime >= max_time - 1:
-            break
+async def fetch_video_data(api, videoid):
+    async with httpx.AsyncClient() as client:
         try:
-            res = httpx.get(api + url, timeout=max_api_wait_time)
-            if res.status_code == 200 and is_json(res.text):
-                print(f"動画API成功: {api}")  # 成功したAPIをログに出力
-                return res.text
-            else:
-                print(f"エラー: {api}")
-                video_apis.append(api)
-                video_apis.remove(api)
+            response = await client.get(api + urllib.parse.quote(videoid), timeout=max_api_wait_time)
+            if response.status_code == 200 and is_json(response.text):
+                return response.json()
         except Exception as e:
-            print(f"タイムアウト: {api} - エラー: {e}")
-            video_apis.append(api)
-            video_apis.remove(api)
-    raise APItimeoutError("動画APIがタイムアウトしました")
+            print(f"Error fetching from {api}: {e}")
+    return None
+
+async def apirequest_video(videoid):
+    tasks = [fetch_video_data(api, videoid) for api in video_apis]
+    responses = await httpx.gather(*tasks)
+
+    # Return the first successful response
+    for response in responses:
+        if response:
+            return response
+    raise APItimeoutError("All video APIs timed out.")
 
 def getting_data(videoid):
-    # 代替APIリスト
+    # Alternative API list
     urls = [
         f"https://ludicrous-wonderful-temple.glitch.me/api/login/{urllib.parse.quote(videoid)}",
         f"https://free-sudden-kiss.glitch.me/api/login/{urllib.parse.quote(videoid)}",
@@ -68,58 +65,21 @@ def getting_data(videoid):
         try:
             response = httpx.get(url)
             if response.status_code == 200:
-                t = response.json()
-                
-                # 推奨動画リストの構築
-                related_videos = [{
-                    "id": t["videoId"],
-                    "title": t["videoTitle"],
-                    "authorId": t["channelId"],
-                    "author": t["channelName"],
-                    "viewCount": t["videoViews"]
-                }]
-                
-                # 必要な情報を取得
-                stream_urls = [
-                    t["stream_url"],
-                    t.get("highstreamUrl", ""),
-                    t.get("audioUrl", "")
-                ]
-                description = t["videoDes"].replace("\n", "<br>")
-                title = t["videoTitle"]
-                authorId = t["channelId"]
-                author = t["channelName"]
-                author_icon = t["channelImage"]
-                view_count = t["videoViews"]
-                
-                # get_dataの形式に合わせて返す
-                video_data = {
-                    'video_urls': stream_urls,  # ストリームURL
-                    'description_html': description,
-                    'title': title,
-                    'author_id': authorId,
-                    'author': author,
-                    'author_thumbnails_url': author_icon,
-                    'view_count': view_count,
-                    'request_duration': None  # durationが無い場合はNone
-                }
-
-                return related_videos, video_data
+                return response.json()
         except Exception as e:
-            print(f"{url} からのデータ取得に失敗しました: {e}")
-    
-    raise Exception("全ての代替URLからデータを取得できませんでした。")
+            print(f"Failed to fetch data from {url}: {e}")
 
-def get_data(videoid):
+    raise Exception("Data could not be retrieved from all alternative URLs.")
+
+async def get_data(videoid):
     try:
-        # 最初にAPIからデータを取得しようとする
-        t = json.loads(apirequest_video(r"api/v1/videos/" + urllib.parse.quote(videoid)))
+        # Attempt to fetch data from the primary APIs
+        video_data = await apirequest_video(f"api/v1/videos/{videoid}")
     except (APItimeoutError, json.JSONDecodeError) as e:
-        print(f"データ取得に失敗しました: {e}")
-        # 失敗したときには代替の方法を使用する
+        print(f"Failed to fetch data: {e}")
         return getting_data(videoid)
 
-    # 関連動画を解析してリストにする
+    # Parse related videos from the response
     related_videos = [
         {
             "id": i["videoId"],
@@ -128,31 +88,31 @@ def get_data(videoid):
             "author": i["author"],
             "viewCount": i["viewCount"]
         }
-        for i in t.get("recommendedVideos", [])
+        for i in video_data.get("recommendedVideos", [])
     ]
 
-    # メイン動画データの準備
-    video_data = {
-        'video_urls': list(reversed([i["url"] for i in t.get("formatStreams", [])]))[:2],
-        'description_html': t.get("descriptionHtml", "").replace("\n", "<br>"),
-        'title': t.get("title", "タイトル不明"),
-        'author_id': t.get("authorId", "不明"),
-        'author': t.get("author", "不明"),
-        'author_thumbnails_url': t.get("authorThumbnails", [{}])[-1].get("url", ""),
-        'view_count': t.get("viewCount", "不明"),
+    # Prepare the main video data
+    video_details = {
+        'video_urls': [i["url"] for i in video_data.get("formatStreams", [])],
+        'description_html': video_data.get("descriptionHtml", "").replace("\n", "<br>"),
+        'title': video_data.get("title", "Unknown Title"),
+        'author_id': video_data.get("authorId", "Unknown"),
+        'author': video_data.get("author", "Unknown"),
+        'author_thumbnails_url': video_data.get("authorThumbnails", [{}])[-1].get("url", ""),
+        'view_count': video_data.get("viewCount", "Unknown"),
     }
 
-    return related_videos, video_data
+    return related_videos, video_details
 
 @app.get("/video/{videoid}", response_class=HTMLResponse)
 async def get_video(videoid: str):
-    related_videos, video_data = get_data(videoid)
+    related_videos, video_details = await get_data(videoid)
     
-    # HTML形式での応答
+    # Construct HTML response
     html_content = f"""
-    <h1>動画データ</h1>
-    <pre>{json.dumps(video_data, ensure_ascii=False, indent=4)}</pre>
-    <h1>関連動画</h1>
+    <h1>Video Data</h1>
+    <pre>{json.dumps(video_details, ensure_ascii=False, indent=4)}</pre>
+    <h1>Related Videos</h1>
     <pre>{json.dumps(related_videos, ensure_ascii=False, indent=4)}</pre>
     """
     return HTMLResponse(content=html_content)
