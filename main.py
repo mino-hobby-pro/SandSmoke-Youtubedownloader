@@ -35,7 +35,7 @@ def requestAPI(endpoint):
     return None, "すべてのAPIで失敗しました。", None  # すべてのAPIで失敗
 
 def get_data(videoid):
-    response_text, error_msg, duration = requestAPI(f"/videos/{urllib.parse.quote(videoid)}")
+    response_text, error_msg, duration = requestAPI(f"api/v1/videos/{urllib.parse.quote(videoid)}")
     
     if response_text is None:
         # データ取得に失敗した場合はgetting_dataを呼び出す
