@@ -38,7 +38,8 @@ def get_data(videoid):
     response_text, error_msg, duration = requestAPI(f"/videos/{urllib.parse.quote(videoid)}")
     
     if response_text is None:
-        raise HTTPException(status_code=404, detail=error_msg)
+        # データ取得に失敗した場合はgetting_dataを呼び出す
+        return getting_data(videoid)
 
     try:
         t = json.loads(response_text)
@@ -72,6 +73,62 @@ def get_data(videoid):
         raise HTTPException(status_code=500, detail="JSONレスポンスのデコードに失敗しました。サーバーの応答: " + response_text)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"エラーが発生しました: {str(e)}")
+
+def getting_data(videoid):
+    urls = [
+        f"https://ludicrous-wonderful-temple.glitch.me/api/login/{urllib.parse.quote(videoid)}",
+        f"https://free-sudden-kiss.glitch.me/api/login/{urllib.parse.quote(videoid)}",
+        f"https://wakame02m.glitch.me/api/login/{urllib.parse.quote(videoid)}",
+        f"https://natural-voltaic-titanium.glitch.me/api/login/{urllib.parse.quote(videoid)}",
+        f"https://watawatawata.glitch.me/api/{urllib.parse.quote(videoid)}?token=wakameoishi",
+        f"https://jade-highfalutin-account.glitch.me/api/login/{urllib.parse.quote(videoid)}"
+    ]
+    
+    for url in urls:
+        try:
+            response = httpx.get(url)
+            if response.status_code == 200:
+                t = response.json()
+                
+                # 推奨動画リストの構築
+                related_videos = [{
+                    "id": t["videoId"],
+                    "title": t["videoTitle"],
+                    "authorId": t["channelId"],
+                    "author": t["channelName"],
+                    "viewCount": t["videoViews"]
+                }]
+                
+                # 必要な情報を取得
+                stream_urls = [
+                    t["stream_url"],
+                    t.get("highstreamUrl", ""),
+                    t.get("audioUrl", "")
+                ]
+                description = t["videoDes"].replace("\n", "<br>")
+                title = t["videoTitle"]
+                authorId = t["channelId"]
+                author = t["channelName"]
+                author_icon = t["channelImage"]
+                view_count = t["videoViews"]
+                
+                # get_dataの形式に合わせて返す
+                video_data = {
+                    'video_urls': stream_urls,  # ストリームURL
+                    'description_html': description,
+                    'title': title,
+                    'author_id': authorId,
+                    'author': author,
+                    'author_thumbnails_url': author_icon,
+                    'view_count': view_count,
+                    'request_duration': None  # durationが無い場合はNone
+                }
+
+                return related_videos, video_data
+        except Exception as e:
+            print(f"{url} からのデータ取得に失敗しました: {e}")
+    
+    raise Exception("全ての代替URLからデータを取得できませんでした。")
 
 @app.get("/video/{videoid}", response_class=HTMLResponse)
 async def get_video(videoid: str):
