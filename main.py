@@ -14,6 +14,12 @@ requestAPI_urls = [
     'https://youtube.privacyplz.org/'
 ]
 
+class APIError(Exception):
+    def __init__(self, base_url, status_code, message):
+        self.base_url = base_url
+        self.status_code = status_code
+        self.message = message
+
 def requestAPI(endpoint):
     for base_url in requestAPI_urls:
         try:
@@ -21,28 +27,27 @@ def requestAPI(endpoint):
             response.raise_for_status()  # HTTPエラーが発生した場合に例外を発生させる
             return response.text
         except httpx.HTTPStatusError as e:
-            print(f"HTTPエラーが発生しました: {base_url} - ステータスコード: {e.response.status_code} - メッセージ: {e.response.text}")
+            raise APIError(base_url, e.response.status_code, e.response.text)
         except Exception as e:
-            print(f"エラーが発生しました: {e} - ベースURL: {base_url}")
+            raise APIError(base_url, None, str(e))
     return None
 
-
 def getVideoData(videoid):
-    response_text = requestAPI(f"/videos/{urllib.parse.quote(videoid)}")
-    
-    if response_text is None:
-        raise HTTPException(status_code=404, detail="動画が見つかりませんでした。全てのAPIに対してリクエストに失敗しました。")
+    try:
+        response_text = requestAPI(f"/videos/{urllib.parse.quote(videoid)}")
+    except APIError as e:
+        raise HTTPException(status_code=404, detail={
+            "message": "動画が見つかりませんでした。",
+            "base_url": e.base_url,
+            "status_code": e.status_code,
+            "error_message": e.message
+        })
 
     try:
         t = json.loads(response_text)
 
         # 推奨動画の取得
-        if 'recommendedvideo' in t:
-            recommended_videos = t["recommendedvideo"]
-        elif 'recommendedVideos' in t:
-            recommended_videos = t["recommendedVideos"]
-        else:
-            recommended_videos = []
+        recommended_videos = t.get("recommendedvideo") or t.get("recommendedVideos", [])
 
         # メイン動画データの準備
         video_data = {
@@ -72,10 +77,12 @@ def getVideoData(videoid):
 
         return video_data, recommended_videos_data
     except json.JSONDecodeError:
-        raise HTTPException(status_code=500, detail="JSONレスポンスのデコードに失敗しました。サーバーの応答: " + response_text)
+        raise HTTPException(status_code=500, detail={
+            "message": "JSONレスポンスのデコードに失敗しました。",
+            "response": response_text
+        })
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"エラーが発生しました: {str(e)}")
-
+        raise HTTPException(status_code=500, detail={"message": f"エラーが発生しました: {str(e)}"})
 
 @app.get("/video/{videoid}")
 async def get_video(videoid: str):
