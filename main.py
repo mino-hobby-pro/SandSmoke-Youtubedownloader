@@ -34,7 +34,7 @@ def requestAPI(endpoint):
             return None, error_msg, duration  # エラーメッセージを返す
     return None, "すべてのAPIで失敗しました。", None  # すべてのAPIで失敗
 
-def getVideoData(videoid):
+def get_data(videoid):
     response_text, error_msg, duration = requestAPI(f"/videos/{urllib.parse.quote(videoid)}")
     
     if response_text is None:
@@ -43,38 +43,31 @@ def getVideoData(videoid):
     try:
         t = json.loads(response_text)
 
-        # 推奨動画の取得
-        recommended_videos = t.get("recommendedvideo", t.get("recommendedVideos", []))
+        # 関連動画を解析してリストにする
+        related_videos = [
+            {
+                "id": i["videoId"],
+                "title": i["title"],
+                "authorId": i["authorId"],
+                "author": i["author"],
+                "viewCount": i["viewCount"]
+            }
+            for i in t.get("recommendedVideos", [])
+        ]
 
         # メイン動画データの準備
         video_data = {
             'video_urls': list(reversed([i["url"] for i in t.get("formatStreams", [])]))[:2],
             'description_html': t.get("descriptionHtml", "").replace("\n", "<br>"),
             'title': t.get("title", "タイトル不明"),
-            'length_text': str(datetime.timedelta(seconds=t.get("lengthSeconds", 0))),
             'author_id': t.get("authorId", "不明"),
             'author': t.get("author", "不明"),
             'author_thumbnails_url': t.get("authorThumbnails", [{}])[-1].get("url", ""),
             'view_count': t.get("viewCount", "不明"),
-            'like_count': t.get("likeCount", "不明"),
-            'subscribers_count': t.get("subCountText", "不明"),
             'request_duration': duration,  # リクエストにかかった時間
-            'base_url': "成功したAPIのURL"  # 成功したAPIのURL
         }
 
-        # 推奨動画データの準備
-        recommended_videos_data = [
-            {
-                "video_id": i.get("videoId", "不明"),
-                "title": i.get("title", "タイトル不明"),
-                "author_id": i.get("authorId", "不明"),
-                "author": i.get("author", "不明"),
-                "length_text": str(datetime.timedelta(seconds=i.get("lengthSeconds", 0))),
-                "view_count_text": i.get("viewCountText", "不明")
-            } for i in recommended_videos
-        ]
-
-        return video_data, recommended_videos_data
+        return related_videos, video_data
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="JSONレスポンスのデコードに失敗しました。サーバーの応答: " + response_text)
     except Exception as e:
@@ -82,14 +75,14 @@ def getVideoData(videoid):
 
 @app.get("/video/{videoid}", response_class=HTMLResponse)
 async def get_video(videoid: str):
-    video_data, recommended_videos_data = getVideoData(videoid)
+    related_videos, video_data = get_data(videoid)
     
     # HTML形式での応答
     html_content = f"""
     <h1>動画データ</h1>
     <pre>{json.dumps(video_data, ensure_ascii=False, indent=4)}</pre>
-    <h1>推奨動画</h1>
-    <pre>{json.dumps(recommended_videos_data, ensure_ascii=False, indent=4)}</pre>
+    <h1>関連動画</h1>
+    <pre>{json.dumps(related_videos, ensure_ascii=False, indent=4)}</pre>
     """
     return HTMLResponse(content=html_content)
 
