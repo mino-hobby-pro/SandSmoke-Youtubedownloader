@@ -18,68 +18,64 @@ def requestAPI(endpoint):
     for base_url in requestAPI_urls:
         try:
             response = httpx.get(f"{base_url}{endpoint}")
-            response.raise_for_status()  # Raise an exception for HTTP errors
+            response.raise_for_status()  # HTTPエラーが発生した場合に例外を発生させる
             return response.text
         except httpx.HTTPStatusError as e:
-            print(f"HTTP error occurred: {e.response.status_code} - {e.response.text}")
+            print(f"HTTPエラーが発生しました: {base_url} - ステータスコード: {e.response.status_code} - メッセージ: {e.response.text}")
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print(f"エラーが発生しました: {e} - ベースURL: {base_url}")
     return None
+
 
 def getVideoData(videoid):
     response_text = requestAPI(f"/videos/{urllib.parse.quote(videoid)}")
     
     if response_text is None:
-        raise HTTPException(status_code=404, detail="Video not found")
+        raise HTTPException(status_code=404, detail="動画が見つかりませんでした。全てのAPIに対してリクエストに失敗しました。")
 
     try:
         t = json.loads(response_text)
 
+        # 推奨動画の取得
         if 'recommendedvideo' in t:
             recommended_videos = t["recommendedvideo"]
         elif 'recommendedVideos' in t:
             recommended_videos = t["recommendedVideos"]
         else:
-            recommended_videos = [{
-                "videoId": "failed",
-                "title": "failed",
-                "authorId": "failed",
-                "author": "failed",
-                "lengthSeconds": 0,
-                "viewCountText": "Load Failed"
-            }]
-        
-        # Prepare the main video data
+            recommended_videos = []
+
+        # メイン動画データの準備
         video_data = {
-            'video_urls': list(reversed([i["url"] for i in t["formatStreams"]]))[:2],
-            'description_html': t["descriptionHtml"].replace("\n", "<br>"),
-            'title': t["title"],
-            'length_text': str(datetime.timedelta(seconds=t["lengthSeconds"])),
-            'author_id': t["authorId"],
-            'author': t["author"],
-            'author_thumbnails_url': t["authorThumbnails"][-1]["url"],
-            'view_count': t["viewCount"],
-            'like_count': t["likeCount"],
-            'subscribers_count': t["subCountText"]
+            'video_urls': list(reversed([i["url"] for i in t.get("formatStreams", [])]))[:2],
+            'description_html': t.get("descriptionHtml", "").replace("\n", "<br>"),
+            'title': t.get("title", "タイトル不明"),
+            'length_text': str(datetime.timedelta(seconds=t.get("lengthSeconds", 0))),
+            'author_id': t.get("authorId", "不明"),
+            'author': t.get("author", "不明"),
+            'author_thumbnails_url': t.get("authorThumbnails", [{}])[-1].get("url", ""),
+            'view_count': t.get("viewCount", "不明"),
+            'like_count': t.get("likeCount", "不明"),
+            'subscribers_count': t.get("subCountText", "不明")
         }
 
-        # Prepare recommended videos data
+        # 推奨動画データの準備
         recommended_videos_data = [
             {
-                "video_id": i["videoId"],
-                "title": i["title"],
-                "author_id": i["authorId"],
-                "author": i["author"],
-                "length_text": str(datetime.timedelta(seconds=i["lengthSeconds"])),
-                "view_count_text": i["viewCountText"]
+                "video_id": i.get("videoId", "不明"),
+                "title": i.get("title", "タイトル不明"),
+                "author_id": i.get("authorId", "不明"),
+                "author": i.get("author", "不明"),
+                "length_text": str(datetime.timedelta(seconds=i.get("lengthSeconds", 0))),
+                "view_count_text": i.get("viewCountText", "不明")
             } for i in recommended_videos
         ]
 
         return video_data, recommended_videos_data
     except json.JSONDecodeError:
-        raise HTTPException(status_code=500, detail="Failed to decode JSON response")
+        raise HTTPException(status_code=500, detail="JSONレスポンスのデコードに失敗しました。サーバーの応答: " + response_text)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"エラーが発生しました: {str(e)}")
+
 
 @app.get("/video/{videoid}")
 async def get_video(videoid: str):
