@@ -1,41 +1,40 @@
 import json
 import urllib.parse
 import datetime
-from flask import Flask, request, jsonify
-import requests
+import httpx
+from fastapi import FastAPI
 
-app = Flask(__name__)
+app = FastAPI()
 
-# Invidious APIのリスト
-requestAPI = {
-    'videos': [
-        'https://invidious.nerdvpn.de/',
-        'https://youtube.privacyplz.org/'
-    ],
-    # 他のリクエストAPIのリストも必要に応じて追加
-}
+# Invidious API URLs
+requestAPI_urls = [
+    'https://invidious.nerdvpn.de/',
+    'https://youtube.privacyplz.org/',
+]
 
-def request_video_data(videoid):
-    url = f"{requestAPI['videos'][0]}/videos/{urllib.parse.quote(videoid)}"
-    response = requests.get(url)
-    return response.json()
+def requestAPI(endpoint):
+    for base_url in requestAPI_urls:
+        response = httpx.get(f"{base_url}{endpoint}")
+        if response.status_code == 200:
+            return response.text
+    return None
 
 def getVideoData(videoid):
-    t = request_video_data(videoid)
+    t = json.loads(requestAPI(f"/videos/{urllib.parse.quote(videoid)}"))
 
     if 'recommendedvideo' in t:
         recommended_videos = t["recommendedvideo"]
     elif 'recommendedVideos' in t:
         recommended_videos = t["recommendedVideos"]
     else:
-        recommended_videos = {
+        recommended_videos = [{
             "videoId": "failed",
             "title": "failed",
             "authorId": "failed",
             "author": "failed",
             "lengthSeconds": 0,
             "viewCountText": "Load Failed"
-        }
+        }]
 
     return [
         {
@@ -62,10 +61,11 @@ def getVideoData(videoid):
         ]
     ]
 
-@app.route('/api/video/<videoid>', methods=['GET'])
-def video_api(videoid):
-    data = getVideoData(videoid)
-    return jsonify(data)
+@app.get("/video/{videoid}")
+async def get_video(videoid: str):
+    return getVideoData(videoid)
 
-if __name__ == '__main__':
-    app.run()
+# uvicornを使ってアプリを実行
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
