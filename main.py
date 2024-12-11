@@ -32,6 +32,7 @@ def getting_data(videoid):
     urls = [
         f"https://ludicrous-wonderful-temple.glitch.me/api/login/{urllib.parse.quote(videoid)}",
         f"https://inv.nadeko.net/api/v1/videos/{urllib.parse.quote(videoid)}",
+        f"https://invidious.nerdvpn.de/api/v1/videos/{urllib.parse.quote(videoid)}",
     ]
     
     for url in urls:
