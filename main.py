@@ -8,8 +8,7 @@ app = FastAPI()
 
 # Invidious API URLs
 requestAPI_urls = [
-    'https://invidious.nerdvpn.de/',
-    'https://youtube.privacyplz.org/',
+'https://inv.nadeko.net/', 'https://inv.zzls.xyz/', 'https://invidious.nerdvpn.de/', 'https://youtube.privacyplz.org/'
 ]
 
 def requestAPI(endpoint):
