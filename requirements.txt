@@ -1,2 +1,2 @@
-Flask==2.0.1
-pytube==10.8.5
+Flask
+pytube
