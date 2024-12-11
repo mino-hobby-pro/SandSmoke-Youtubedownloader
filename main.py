@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse
 app = FastAPI()
 
 # Invidious API URL
-invidious_base_url = 'https://inv.nadeko.net/api/v1/videos/'
+invidious_base_url = 'https://script.google.com/macros/s/AKfycbxYjOWULjin5kpp-NcjjjGujVX3wy1TEJVUR2AZtR6-5c_q7GBr1Nctl2_Kat4lSboD/exec?videoId='
 
 async def requestAPI(videoid):
     url = f"{invidious_base_url}{urllib.parse.quote(videoid)}"
