@@ -26,17 +26,19 @@ def requestAPI(endpoint):
             return response.text, base_url, duration  # レスポンスとAPIのURL、かかった時間を返す
         except httpx.HTTPStatusError as e:
             duration = time.time() - start_time
-            print(f"HTTPエラーが発生しました: {base_url} - ステータスコード: {e.response.status_code} - メッセージ: {e.response.text} - 時間: {duration:.2f}秒")
+            error_msg = f"HTTPエラーが発生しました: {base_url} - ステータスコード: {e.response.status_code} - メッセージ: {e.response.text} - 時間: {duration:.2f}秒"
+            return None, error_msg, duration  # エラーメッセージを返す
         except Exception as e:
             duration = time.time() - start_time
-            print(f"エラーが発生しました: {e} - ベースURL: {base_url} - 時間: {duration:.2f}秒")
-    return None, None, None  # すべてのAPIで失敗
+            error_msg = f"エラーが発生しました: {e} - ベースURL: {base_url} - 時間: {duration:.2f}秒"
+            return None, error_msg, duration  # エラーメッセージを返す
+    return None, "すべてのAPIで失敗しました。", None  # すべてのAPIで失敗
 
 def getVideoData(videoid):
-    response_text, base_url, duration = requestAPI(f"/videos/{urllib.parse.quote(videoid)}")
+    response_text, error_msg, duration = requestAPI(f"/videos/{urllib.parse.quote(videoid)}")
     
     if response_text is None:
-        raise HTTPException(status_code=404, detail="動画が見つかりませんでした。全てのAPIに対してリクエストに失敗しました。")
+        raise HTTPException(status_code=404, detail=error_msg)
 
     try:
         t = json.loads(response_text)
@@ -57,7 +59,7 @@ def getVideoData(videoid):
             'like_count': t.get("likeCount", "不明"),
             'subscribers_count': t.get("subCountText", "不明"),
             'request_duration': duration,  # リクエストにかかった時間
-            'base_url': base_url  # 成功したAPIのURL
+            'base_url': "成功したAPIのURL"  # 成功したAPIのURL
         }
 
         # 推奨動画データの準備
