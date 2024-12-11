@@ -2,9 +2,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const videoId = params.get('id');
 
+    const urlListDiv = document.getElementById('url-list');
+
     if (videoId) {
         const apiUrl = `https://inv.nadeko.net/api/v1/videos/${videoId}`;
         
+        // 抽出中メッセージを表示
+        urlListDiv.innerText = '抽出中...';
+
         fetch(apiUrl)
             .then(response => {
                 if (!response.ok) {
@@ -18,9 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(error => {
                 console.error('There was a problem with the fetch operation:', error);
+                urlListDiv.innerText = 'エラーが発生しました。';
             });
     } else {
-        document.getElementById('url-list').innerText = '動画IDが指定されていません。';
+        urlListDiv.innerText = '動画IDが指定されていません。';
     }
 });
 
