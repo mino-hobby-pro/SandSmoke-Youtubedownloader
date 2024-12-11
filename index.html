@@ -6,28 +6,18 @@
     <title>SandTube</title>
 </head>
 <body>
-    <h1>動画ストリームURL取得</h1>
-    <form id="videoForm">
-        <label for="videoId">YouTube動画ID:</label>
-        <input type="text" id="videoId" name="videoId" required>
-        <button type="submit">取得</button>
-    </form>
-    <div id="result"></div>
+    <h1>動画ストリーム取得</h1>
+    <input type="text" id="videoId" placeholder="動画IDを入力">
+    <button onclick="getStreamURL()">取得</button>
+    <p id="result"></p>
 
     <script>
-        document.getElementById('videoForm').addEventListener('submit', function(event) {
-            event.preventDefault();
+        async function getStreamURL() {
             const videoId = document.getElementById('videoId').value;
-            fetch(`/video?id=${videoId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.stream_url) {
-                        document.getElementById('result').textContent = `ストリームURL: ${data.stream_url}`;
-                    } else {
-                        document.getElementById('result').textContent = `エラー: ${data.error}`;
-                    }
-                });
-        });
+            const response = await fetch(`/video?id=${videoId}`);
+            const data = await response.json();
+            document.getElementById('result').innerText = data.stream_url || data.error;
+        }
     </script>
 </body>
 </html>
