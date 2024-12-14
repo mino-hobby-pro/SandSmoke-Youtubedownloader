@@ -1,3 +1,4 @@
+#100%CHATGPTです
 document.getElementById('fetchButton').addEventListener('click', async () => {
     const videoId = document.getElementById('videoId').value;
     const apiUrl = `https://inv.nadeko.net/api/v1/videos/${videoId}`;
