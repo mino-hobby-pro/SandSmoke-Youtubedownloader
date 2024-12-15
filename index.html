@@ -70,13 +70,33 @@
     <ul id="comments"></ul>
   </div>
 
-  <script>
+  <script type="module">
+    // Firebase SDKのインポート
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { getDatabase, ref, set, get, child, remove } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+
+    // Firebaseの設定
+    const firebaseConfig = {
+      apiKey: "AIzaSyC3lO-ORyAOwMQ2yMA9_IqPDZrIdpekqZI",
+      authDomain: "sandsmoke-79dca.firebaseapp.com",
+      databaseURL: "https://sandsmoke-79dca-default-rtdb.firebaseio.com",
+      projectId: "sandsmoke-79dca",
+      storageBucket: "sandsmoke-79dca.firebasestorage.app",
+      messagingSenderId: "61141711489",
+      appId: "1:61141711489:web:42ee7bdf5bb663acd26b80",
+      measurementId: "G-2KWZJ41M2X"
+    };
+
+    // Firebaseの初期化
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
     document.addEventListener("DOMContentLoaded", () => {
       const urlParams = new URLSearchParams(window.location.search);
       const videoId = urlParams.get("videoId");
 
       if (videoId) {
-        fetchVideoData(videoId);
+        fetchFromFirebase(videoId);
       }
     });
 
@@ -108,6 +128,9 @@
           throw new Error("APIリクエストに失敗しました");
         }
         const data = await response.json();
+
+        // Firebaseにデータを保存
+        await saveToFirebase(videoId, data);
         displayResults(data);
       } catch (error) {
         alert(`エラー: ${error.message}`);
@@ -138,9 +161,41 @@
       window.history.pushState(null, "", currentUrl);
     }
 
+    async function saveToFirebase(videoId, data) {
+      const videoRef = ref(database, `videos/${videoId}`);
+      const expirationTime = Date.now() + 86400000; // 1日後のタイムスタンプ
+
+      await set(videoRef, {
+        ...data,
+        expiration: expirationTime
+      });
+
+      // 1日後にデータを削除するためのタイマー
+      setTimeout(() => {
+        remove(videoRef);
+      }, 86400000);
+    }
+
+    async function fetchFromFirebase(videoId) {
+      const videoRef = ref(database, `videos/${videoId}`);
+      const snapshot = await get(videoRef);
+
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        // 現在の時刻がデータの有効期限を超えている場合は削除
+        if (Date.now() > data.expiration) {
+          remove(videoRef);
+          alert("データの有効期限が切れました。再度取得してください。");
+        } else {
+          displayResults(data);
+        }
+      } else {
+        alert("データが見つかりませんでした。");
+      }
+    }
+
     function displayResults(data) {
       document.getElementById("title").textContent = data.title;
-
       const formatStreams = data.formatStreams || [];
       const streamUrl = formatStreams.length > 0 ? formatStreams[0].url : null;
 
