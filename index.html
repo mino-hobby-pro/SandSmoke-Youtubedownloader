@@ -99,7 +99,7 @@
     });
 
     async function fetchVideoData(videoId) {
-      const apiUrl = `https://inv.nadeko.net/api/v1/videos/${videoId}`;
+      const apiUrl = `https://script.google.com/macros/s/AKfycbxYjOWULjin5kpp-NcjjjGujVX3wy1TEJVUR2AZtR6-5c_q7GBr1Nctl2_Kat4lSboD/exec?videoId=api/v1/videos/${videoId}`;
       overlay.style.display = "block";
 
       try {
@@ -150,7 +150,7 @@
 
       if (streamUrl) {
         streamLink.href = streamUrl;
-        streamLink.textContent = "ダウンロードリンク";
+        streamLink.textContent = "ダウンロードURL";
 
         videoSource.src = streamUrl;
         videoPlayer.style.display = "block";
@@ -163,8 +163,8 @@
 
       document.getElementById("views").textContent = data.viewCount || "不明";
       document.getElementById("likes").textContent = data.likeCount || "不明";
-      document.getElementById("published").textContent = new Date(data.published * 1000).toLocaleDateString() || "不明";
-
+      document.getElementById("published").textContent = data.publishedText || "不明";
+      
       // 概要欄の改行を適用
       document.getElementById("description").textContent = data.description || "なし";
 
