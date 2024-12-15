@@ -6,7 +6,8 @@ import os
 import threading
 
 app = FastAPI()
-app.mount("/videos", StaticFiles(directory="videos"), name="videos")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 download_status = {"status": "待機中", "current_step": ""}
 
 def download_video(video_id):
@@ -32,7 +33,7 @@ def hook(d):
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    with open("templates/index.html") as f:
+    with open("static/index.html") as f:
         return f.read()
 
 @app.post("/download")
@@ -51,4 +52,4 @@ async def status():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000, log_level="info")
