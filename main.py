@@ -42,7 +42,7 @@ def download():
     
     return jsonify({"status": "ダウンロードを開始しました。"})
 
-@app.route('/status')
+@app.route('/status', methods=['GET'])  # GETメソッドを明示的に指定
 def status():
     return jsonify(download_status)
 
