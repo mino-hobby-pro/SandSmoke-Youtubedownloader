@@ -99,21 +99,28 @@
     });
 
     async function fetchVideoData(videoId) {
-      const apiUrl = `https://script.google.com/macros/s/AKfycbxYjOWULjin5kpp-NcjjjGujVX3wy1TEJVUR2AZtR6-5c_q7GBr1Nctl2_Kat4lSboD/exec?videoId=api/v1/videos/${videoId}`;
+      const apiUrls = [
+        'https://script.google.com/macros/s/AKfycbxYjOWULjin5kpp-NcjjjGujVX3wy1TEJVUR2AZtR6-5c_q7GBr1Nctl2_Kat4lSboD/exec?videoId=api/v1/videos/${videoId}',
+        'https://inv.nadeko.net/api/v1/videos/${videoId}', 
+        'https://inv.zzls.xyz/api/v1/videos/${videoId}', 
+        'https://invidious.nerdvpn.de/api/v1/videos/${videoId}',
+        'https://youtube.privacyplz.org/api/v1/videos/${videoId}'
+      ];
       overlay.style.display = "block";
 
-      try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          throw new Error("APIリクエストに失敗しました");
-        }
-        const data = await response.json();
-        displayResults(data);
-      } catch (error) {
-        alert(`エラー: ${error.message}`);
-      } finally {
-        overlay.style.display = "none";
-      }
+      // Promise.allを使用して全てのAPIリクエストを同時に実行
+      const fetchPromises = apiUrls.map(url => fetch(url).then(response => {
+        if (!response.ok) throw new Error("APIリクエストに失敗しました");
+        return response.json();
+      }));
+
+      // 先に成功したレスポンスを取得
+      Promise.any(fetchPromises)
+        .then(data => displayResults(data))
+        .catch(error => alert(`エラー: ${error.message}`))
+        .finally(() => {
+          overlay.style.display = "none";
+        });
     }
 
     function extractVideoId(input) {
