@@ -4,7 +4,7 @@ import os
 import threading
 
 app = Flask(__name__)
-download_status = {"status": "", "current_step": ""}
+download_status = {"status": "待機中", "current_step": ""}
 
 def download_video(video_id):
     global download_status
