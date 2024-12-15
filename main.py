@@ -1,9 +1,12 @@
-from flask import Flask, render_template, request, jsonify
+from fastapi import FastAPI, Form
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 import yt_dlp
 import os
 import threading
 
-app = Flask(__name__)
+app = FastAPI()
+app.mount("/videos", StaticFiles(directory="videos"), name="videos")
 download_status = {"status": "待機中", "current_step": ""}
 
 def download_video(video_id):
@@ -27,24 +30,25 @@ def hook(d):
     if d['status'] == 'downloading':
         download_status["current_step"] = f"残り: {d['downloaded_bytes'] / d['total_bytes']:.2%} 完了"
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+@app.get("/", response_class=HTMLResponse)
+async def index():
+    with open("templates/index.html") as f:
+        return f.read()
 
-@app.route('/download', methods=['POST'])
-def download():
-    video_id = request.form['video_id']
+@app.post("/download")
+async def download(video_id: str = Form(...)):
     if not os.path.exists('videos'):
         os.makedirs('videos')
     
     thread = threading.Thread(target=download_video, args=(video_id,))
     thread.start()
     
-    return jsonify({"status": "ダウンロードを開始しました。"})
+    return JSONResponse(content={"status": "ダウンロードを開始しました。"})
 
-@app.route('/status', methods=['GET'])  # GETメソッドを明示的に指定
-def status():
-    return jsonify(download_status)
+@app.get("/status")
+async def status():
+    return JSONResponse(content=download_status)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
