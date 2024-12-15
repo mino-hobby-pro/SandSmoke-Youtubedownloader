@@ -1,7 +1,7 @@
 #100%CHATGPTです
 document.getElementById('fetchButton').addEventListener('click', async () => {
     const videoId = document.getElementById('videoId').value;
-    const apiUrl = `https://inv.nadeko.net/api/v1/videos/${videoId}`;
+    const apiUrl = `https://inv.nadeko.net/api/v1/videos/${videoId}`;　　//  もうゴミそれだけ
 
     try {
         const response = await fetch(apiUrl);
@@ -14,7 +14,7 @@ document.getElementById('fetchButton').addEventListener('click', async () => {
         // https://rrで始まるURLを全て取得
         const urls = htmlText.match(/https:\/\/rr[^'"]+/g);
         const resultDiv = document.getElementById('result');
-        resultDiv.innerHTML = ''; // 前回の結果をクリア
+        resultDiv.innerHTML = ''; // クリア要素実装中
 
         if (urls) {
             urls.forEach(url => {
