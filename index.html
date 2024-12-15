@@ -129,8 +129,16 @@
         }
         const data = await response.json();
 
-        // Firebaseにデータを保存
-        await saveToFirebase(videoId, data);
+        // Firebaseにデータを保存（表示される情報のみ）
+        await saveToFirebase(videoId, {
+          title: data.title,
+          streamUrl: data.formatStreams?.[0]?.url || null,
+          viewCount: data.viewCount || "不明",
+          likeCount: data.likeCount || "不明",
+          publishedText: data.publishedText || "不明",
+          description: data.description || "なし",
+          comments: data.comments || []
+        });
         displayResults(data);
       } catch (error) {
         alert(`エラー: ${error.message}`);
@@ -196,8 +204,7 @@
 
     function displayResults(data) {
       document.getElementById("title").textContent = data.title;
-      const formatStreams = data.formatStreams || [];
-      const streamUrl = formatStreams.length > 0 ? formatStreams[0].url : null;
+      const streamUrl = data.streamUrl;
 
       const streamLink = document.getElementById("stream-url");
       const videoPlayer = document.getElementById("video-player");
@@ -216,12 +223,12 @@
         videoPlayer.style.display = "none";
       }
 
-      document.getElementById("views").textContent = data.viewCount || "不明";
-      document.getElementById("likes").textContent = data.likeCount || "不明";
-      document.getElementById("published").textContent = data.publishedText || "不明";
-      
+      document.getElementById("views").textContent = data.viewCount;
+      document.getElementById("likes").textContent = data.likeCount;
+      document.getElementById("published").textContent = data.publishedText;
+
       // 概要欄の改行を適用
-      document.getElementById("description").textContent = data.description || "なし";
+      document.getElementById("description").textContent = data.description;
 
       const commentsContainer = document.getElementById("comments");
       commentsContainer.innerHTML = "";
