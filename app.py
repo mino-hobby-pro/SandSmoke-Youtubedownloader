@@ -11,7 +11,8 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 # APIの基礎URL
-API_BASE_URL = "https://inv.nadeko.net"  # 適切なInvidiousインスタンスURLに置き換えてください
+API_BASE_URL = "https://inv.nadeko.net/api/v1"
+API_STREAM_URL = "https://inv.nadeko.net"
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
@@ -25,7 +26,7 @@ def search(q: str, request: Request, page: int = 1):
 
 @app.get("/watch/{video_id}", response_class=HTMLResponse)
 def watch(video_id: str, request: Request):
-    response = requests.get(f"{API_BASE_URL}/videos/{video_id}")
+    response = requests.get(f"{API_STREAM_URL}/videos/{video_id}")
     video_data = response.json()
 
     # Stream URL の抽出処理
