@@ -1,14 +1,20 @@
-{% extends "layout.html" %}
-{% block content %}
-<h2>{{ request.query_params['q'] }} の検索結果</h2>
-<ul>
-    {% for video in results %}
-    <li>
-        <a href="/watch/{{ video.videoId }}">
-            <img src="{{ video.thumbnail }}" alt="{{ video.title }}">
-            <h3>{{ video.title }}</h3>
-        </a>
-    </li>
-    {% endfor %}
-</ul>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ query }}の検索結果</title>
+</head>
+<body>
+    <h1>{{ query }}の検索結果</h1>
+    <a href="/">ホームに戻る</a>
+    <div>
+        {% for video in results %}
+            <div>
+                <h2><a href="/watch/{{ video.videoId }}">{{ video.title }}</a></h2>
+                <p>投稿者: {{ video.author }}</p>
+                <img src="{{ video.thumbnailUrl }}" alt="{{ video.title }}">
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
