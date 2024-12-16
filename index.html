@@ -1,50 +1,11 @@
 <!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>リアルタイムHTMLリーダー</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        #content {
-            border: 1px solid #ccc;
-            padding: 10px;
-            max-height: 600px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-    </style>
-</head>
-<body>
-    <h1>リアルタイムHTMLリーダー</h1>
-    <div id="content">読み取り中...</div>
-    <script>
-        const url = 'https://raw.githubusercontent.com/LunaKamituki/yukiyoutube-inv-instances/refs/heads/main/main.txt'; // 監視するURL
-        let lastHtml = '';
+<lang="ja">
+ <title>ウェブ</title>
+    body{
 
-        async function fetchHtml() {
-            try {
-                const response = await fetch(url, { mode: 'cors' });
-                if (!response.ok) {
-                    throw new Error('ネットワークエラー');
-                }
-                const html = await response.text();
-                if (html !== lastHtml) {
-                    lastHtml = html;
-                    document.getElementById('content').textContent = html; // HTMLを表示
-                }
-            } catch (error) {
-                console.error('Error fetching HTML:', error);
-            }
-        }
-
-        // 定期的にfetchHtmlを呼び出す
-        setInterval(fetchHtml, 5000); // 5秒ごとに取得
-    </script>
-    <h2>このアプリケーションは何のために作成された？</h2>
-    <p>テストｗ</p>
-</body>
-</html>
+    <h1>テスト</h1>
+    }
+<script>
+    windows alert("テストだお")
+</script>
+    
