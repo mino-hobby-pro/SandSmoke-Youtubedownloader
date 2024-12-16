@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>.gitignore Viewer</title>
+    <title>Web Page Fetcher</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -19,13 +19,15 @@
     </style>
 </head>
 <body>
-    <h1>.gitignore Viewer</h1>
-    <button id="fetchButton">Fetch .gitignore</button>
-    <pre id="gitignoreContent"></pre>
+    <h1>Web Page Fetcher</h1>
+    <input type="text" id="urlInput" placeholder="Enter the URL here" />
+    <button id="fetchButton">Fetch Page</button>
+    <h2>Fetched HTML</h2>
+    <pre id="htmlContent"></pre>
 
     <script>
         document.getElementById('fetchButton').addEventListener('click', function() {
-            const url = 'https://raw.githubusercontent.com/mino-hobby-pro/sand-smoke-proxy/refs/heads/main/.gitignore';
+            const url = document.getElementById('urlInput').value;
 
             fetch(url)
                 .then(response => {
@@ -35,7 +37,7 @@
                     return response.text();
                 })
                 .then(data => {
-                    document.getElementById('gitignoreContent').textContent = data;
+                    document.getElementById('htmlContent').textContent = data;
                 })
                 .catch(error => {
                     console.error('There was a problem with the fetch operation:', error);
@@ -44,4 +46,3 @@
     </script>
 </body>
 </html>
-
