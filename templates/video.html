@@ -2,15 +2,35 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ video.title }}</title>
 </head>
 <body>
     <h1>{{ video.title }}</h1>
-    <video controls>
-        <source src="{{ video.video_urls[0] }}" type="video/mp4">
-        お使いのブラウザでは動画を再生できません。
-    </video>
-    <p>投稿者: {{ video.author }}</p>
-    <a href="/">ホームに戻る</a>
+    <p>作者: {{ video.author }}</p>
+    <p>再生時間: {{ video.length_text }}</p>
+    <p>視聴回数: {{ video.view_count }}</p>
+    <p>いいね数: {{ video.like_count }}</p>
+    <p>購読者数: {{ video.subscribers_count }}</p>
+    <div>
+        <h2>ストリームURL</h2>
+        <ul>
+            {% for url in video.video_urls %}
+                <li><a href="{{ url }}">{{ url }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div>
+        <h2>おすすめ動画</h2>
+        <ul>
+            {% for video in recommended_videos %}
+                <li><a href="/watch/{{ video.id }}">{{ video.title }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div>
+        <h2>説明</h2>
+        <div>{{ video.description_html|safe }}</div>
+    </div>
 </body>
 </html>
