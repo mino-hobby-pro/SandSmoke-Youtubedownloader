@@ -11,7 +11,7 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 # APIの基礎URL
-API_BASE_URL = "https://invidious.example.com/api/v1"  # 適切なInvidiousインスタンスURLに置き換えてください
+API_BASE_URL = "https://inv.nadeko.net/api/v1"  # 適切なInvidiousインスタンスURLに置き換えてください
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
