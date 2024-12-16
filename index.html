@@ -3,46 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Page Fetcher</title>
+    <title>リアルタイムHTMLリーダー</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
         }
-        pre {
-            background-color: #f0f0f0;
+        #content {
+            border: 1px solid #ccc;
             padding: 10px;
-            border-radius: 5px;
+            max-height: 600px;
+            overflow-y: auto;
             white-space: pre-wrap;
-            word-wrap: break-word;
         }
     </style>
 </head>
 <body>
-    <h1>Web Page Fetcher</h1>
-    <input type="text" id="urlInput" placeholder="Enter the URL here" />
-    <button id="fetchButton">Fetch Page</button>
-    <h2>Fetched HTML</h2>
-    <pre id="htmlContent"></pre>
-
+    <h1>リアルタイムHTMLリーダー</h1>
+    <div id="content">読み取り中...</div>
     <script>
-        document.getElementById('fetchButton').addEventListener('click', function() {
-            const url = document.getElementById('urlInput').value;
+        const url = 'https://illustrious-rugelach-fbd8b0.netlify.app/'; // 監視するURL
+        let lastHtml = '';
 
-            fetch(url)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.text();
-                })
-                .then(data => {
-                    document.getElementById('htmlContent').textContent = data;
-                })
-                .catch(error => {
-                    console.error('There was a problem with the fetch operation:', error);
-                });
-        });
+        async function fetchHtml() {
+            try {
+                const response = await fetch(url, { mode: 'cors' });
+                if (!response.ok) {
+                    throw new Error('ネットワークエラー');
+                }
+                const html = await response.text();
+                if (html !== lastHtml) {
+                    lastHtml = html;
+                    document.getElementById('content').textContent = html; // HTMLを表示
+                }
+            } catch (error) {
+                console.error('Error fetching HTML:', error);
+            }
+        }
+
+        // 定期的にfetchHtmlを呼び出す
+        setInterval(fetchHtml, 5000); // 5秒ごとに取得
     </script>
 </body>
 </html>
