@@ -7,7 +7,7 @@
 <body>
     <h1>{{ video.title }}</h1>
     <video controls>
-        <source src="{{ video.streamUrl }}" type="video/mp4">
+        <source src="{{ video.video_urls[0] }}" type="video/mp4">
         お使いのブラウザでは動画を再生できません。
     </video>
     <p>投稿者: {{ video.author }}</p>
