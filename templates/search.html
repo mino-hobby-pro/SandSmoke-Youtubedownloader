@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>{{ request.query_params['q'] }} の検索結果</h2>
+<ul>
+    {% for video in results %}
+    <li>
+        <a href="/watch/{{ video.videoId }}">
+            <img src="{{ video.thumbnail }}" alt="{{ video.title }}">
+            <h3>{{ video.title }}</h3>
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}
