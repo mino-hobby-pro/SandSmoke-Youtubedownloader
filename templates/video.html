@@ -1,0 +1,7 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>{{ video.title }}</h2>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/{{ video.videoId }}" frameborder="0" allowfullscreen></iframe>
+<p>著者: {{ video.author }}</p>
+<p>説明: {{ video.descriptionHtml | safe }}</p>
+{% endblock %}
