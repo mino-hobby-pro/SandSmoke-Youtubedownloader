@@ -1,7 +1,16 @@
-{% extends "layout.html" %}
-{% block content %}
-<h2>{{ video.title }}</h2>
-<iframe width="560" height="315" src="https://www.youtube.com/embed/{{ video.videoId }}" frameborder="0" allowfullscreen></iframe>
-<p>著者: {{ video.author }}</p>
-<p>説明: {{ video.descriptionHtml | safe }}</p>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ video.title }}</title>
+</head>
+<body>
+    <h1>{{ video.title }}</h1>
+    <video controls>
+        <source src="{{ video.streamUrl }}" type="video/mp4">
+        お使いのブラウザでは動画を再生できません。
+    </video>
+    <p>投稿者: {{ video.author }}</p>
+    <a href="/">ホームに戻る</a>
+</body>
+</html>
