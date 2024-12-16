@@ -23,15 +23,25 @@ def search(q: str, request: Request, page: int = 1):
     results = response.json()
     return templates.TemplateResponse("search.html", {"request": request, "results": results, "query": q})
 
+
 @app.get("/watch/{video_id}", response_class=HTMLResponse)
 def watch(video_id: str, request: Request):
     response = requests.get(f"{API_BASE_URL}/videos/{video_id}")
     video_data = response.json()
 
-    # Stream URL の抽出処理
+    # ストリームURLの抽出処理
+    stream_urls = []
+    # formatStreamsが存在する場合にストリームURLを取得
+    if "formatStreams" in video_data:
+        for stream in video_data["formatStreams"]:
+            stream_urls.append(stream.get("url"))
+
+    # 推奨動画の取得
     recommended_videos = video_data.get("recommendedVideos", [])
+
+    # 動画情報の作成
     video_info = {
-        'video_urls': list(reversed([stream["url"] for stream in video_data.get("formatStreams", [])]))[:2],
+        'video_urls': list(reversed(stream_urls))[:2],  # 最新の2つのURLを取得
         'description_html': video_data.get("descriptionHtml", "").replace("\n", "<br>"),
         'title': video_data.get("title", "タイトルなし"),
         'length_text': str(datetime.timedelta(seconds=video_data.get("lengthSeconds", 0))),
@@ -48,4 +58,3 @@ def watch(video_id: str, request: Request):
         "video": video_info,
         "recommended_videos": recommended_videos
     })
-
