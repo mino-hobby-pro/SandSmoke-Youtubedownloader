@@ -48,3 +48,4 @@ def watch(video_id: str, request: Request):
         "video": video_info,
         "recommended_videos": recommended_videos
     })
+
