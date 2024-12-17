@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SandSmoke</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-image: url('https://tse4.mm.bing.net/th?id=OIG4.gDAHAlmQD0nqjGKj5ehr&pid=ImgGn');
+            background-size: cover; /* 背景画像を覆う */
+            background-position: center; /* 背景画像を中央に配置 */
+            color: #fff;
+        }
+        h1 {
+            font-size: 2.5rem;
+        }
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20; /* 他の要素の上に表示 */
+        }
+        .top-bar button {
+            padding: 5px 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px; /* ボタン間のスペース */
+        }
+        input[type="text"] {
+            width: 60%;
+            padding: 10px;
+            font-size: 1.5rem;
+            margin-top: 20px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+        }
+        .icon-container {
+            display: flex;
+            margin-top: 20px;
+        }
+        .icon {
+            margin: 0 10px;
+            cursor: pointer;
+        }
+        .icon img {
+            width: 60px;
+            height: 60px;
+        }
+        .cookie-notice {
+            display: none;
+        }
+        .toggle-proxy, .launch-rammerhead, .deploy-button {
+            padding: 5px 10px;
+            font-size: 1.5rem;
+            margin-top: 20px;
+            cursor: pointer;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px; /* Add some space between buttons */
+        }
+        /* Canvasのスタイル */
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* 背景に配置 */
+        }
+        /* ポップアップオーバーレイのスタイル */
+        .overlay {
+            display: none; /* 初期状態は非表示 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 10; /* 他の要素の上に表示 */
+        }
+        .overlay-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            color: black;
+        }
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            z-index: 20; /* 他の要素の上に表示 */
+        }
+        .bottom-bar button {
+            padding: 5px 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            margin: 0 10px; /* ボタン間のスペース */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <button id="urlListButton">URLリスト</button>
+        <button id="openChatButton">オープンチャット</button>
+        <button id="shadowButton">New Shadow proxy</button>
+        <button id="uvproxyButton">New Croxy proxy</button>
+        <button id="proxyButton">New rammer proxy</button>
+        <button class="deploy-button" id="deployButton">デプロイ</button>
+    </div>
+
+    <h1>SandSmoke V1.1</h1>
+
+    <button class="toggle-proxy" id="proxyToggle">proxy: OFF</button>
+    <button class="launch-rammerhead" id="rammerheadButton">Rammerhead</button>
+
+    <input type="text" id="searchInput" placeholder="SandSmoke" onkeypress="handleKeyPress(event)">
+
+    <div class="icon-container">
+        <div class="icon" onclick="window.open('https://sand-smoke-proxy.vercel.app/chat')">
+            <img src="https://www.bannerkoubou.com/image/qbrZxYsZ2pHde6U1734436799_1734436872.png" alt="アイコン1">
+        </div>
+        <div class="icon" onclick="window.open('https://scratch.mit.edu/users/proxy_minotaur_sab/')">
+            <img src="https://msp.c.yimg.jp/images/v2/FUTi93tXq405grZVGgDqG-UPEpGiUmLUvyTKINe5lrNdRrjsrxgVfr6wDMN0CLStbOKDqIoK81ZNmgvECDtOsdoWq87mx26qcpoQ1Pyrkl-_YPIH2YqrFYEDm9aR47DL4Vcar6RZDjaWvdw-zxvVnPF9U3e9_-UBuNrgEtdaPyygeyyNMzUFMat_WeATdfpD/919846.png?errorImage=false" alt="アイコン2">
+        </div>
+        <div class="icon" onclick="window.open('https://discord.gg/8nedA5ZYy8')">
+            <img src="https://msp.c.yimg.jp/images/v2/FUTi93tXq405grZVGgDqG9Pf23FWtdraDrlKE3uxUVuTwRJocD6VOjpjR_24iE4PkjAVt9nHenCu29bq5KhEbHiXGA0QKbxQAUESJEOy_ZeLPw4aS5i0AX4GyF1Thzxze-yw8YUpBfq8NMIXYs8UMiaAwnGfyOCJrCqr5cQA5jhIBS7J42UhoQrmyAOaKyRT/discord-icon.svg?errorImage=false" alt="アイコン3">
+        </div>
+        <div class="icon" onclick="window.open('https://www.chatwork.com/g/web-of-the-library')">
+            <img src="https://msp.c.yimg.jp/images/v2/FUTi93tXq405grZVGgDqG-UPEpGiUmLUvyTKINe5lrNdRrjsrxgVfr6wDMN0CLStomoytCTiQIHfIHZkRhmIYcsxVcXcFX4a1T2gXecRU8S_YPIH2YqrFYEDm9aR47DL4Vcar6RZDjaWvdw-zxvVnMOanpNJMoCQ7p8f1hpaYM1IbtxeaXFLpB1RD21E3qzg/906366.png?errorImage=false" alt="アイコン4">
+        </div>
+        <div class="icon" onclick="window.open('https://github.com/mino-hobby-pro')">
+            <img src="https://img.icons8.com/?size=256&id=52539&format=png" alt="アイコン5">
+        </div>
+    </div>
+
+    <!-- ポップアップオーバーレイ -->
+    <div class="overlay" id="deployOverlay">
+        <div class="overlay-content">
+            <h2>デプロイオプション</h2>
+            <p>以下のボタンをクリックして、各プラットフォームにデプロイできます。renderによるホストを強くお勧めします。</p>
+            <a href="https://vercel.com/import/project?template=https://github.com/mino-hobby-pro/sand-smoke-proxy" target="_blank">
+                <img src="https://vercel.com/button" alt="Deploy to Vercel" />
+            </a>
+            <a href="https://koyeb.com/deploy?type=github&repository=https://github.com/mino-hobby-pro/sand-smoke-proxy" target="_blank">
+                <img src="https://www.koyeb.com/static/images/deploy/button.svg" alt="Deploy to Koyeb" />
+            </a>
+            <a href="https://render.com/deploy?repo=https://github.com/mino-hobby-pro/sand-smoke-proxy" target="_blank">
+                <img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" />
+            </a>
+            <button onclick="closeOverlay()">閉じる</button>
+        </div>
+    </div>
+
+    <canvas id="sandstormCanvas"></canvas>
+
+    <!-- 新しいボトムバー -->
+    <div class="bottom-bar">
+        <button id="aiButton">AI</button>
+        <button id="googleButton">GoogleProxy</button>
+    </div>
+
+    <script>
+        let isProxyMode = false; // プロキシモードの状態
+        const canvas = document.getElementById('sandstormCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Canvasのサイズ設定
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // 砂嵐の描画関数
+        function drawSandstorm() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Canvasをクリア
+            ctx.fillStyle = 'rgba(222, 184, 135, 0.1)'; // 砂の色
+            ctx.fillRect(0, 0, canvas.width, canvas.height); // 砂を塗りつぶす
+
+            // ランダムな砂粒を描画
+            for (let i = 0; i < 100; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 5 + 1; // 1〜6のサイズ
+                ctx.fillStyle = 'rgba(222, 184, 135, 0.1)'; // 砂の色
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            requestAnimationFrame(drawSandstorm); // アニメーションループ
+        }
+
+        // 砂嵐の描画開始
+        drawSandstorm();
+
+        // プロキシモードの切り替え
+        document.getElementById('proxyToggle').onclick = function() {
+            isProxyMode = !isProxyMode;
+            this.textContent = `プロキシ: ${isProxyMode ? 'ON' : 'OFF'}`;
+        };
+
+        // Rammerheadを起動ボタンの処理
+        document.getElementById('rammerheadButton').onclick = function() {
+            const link = prompt("URLを入力してください 読み込みには時間がかかります:");
+            if (link) {
+                // プロキシを使用してURLをアンブロック  APIの権利はTacoGuy様にあります
+                const proxy = 'https://api.codetabs.com/v1/proxy?quest=';
+                fetch(proxy + link)
+                    .then((response) => response.text())
+                    .then((text) => document.write(text))
+                    .catch((error) => alert("エラーが発生しました: " + error));
+            }
+        };
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                const query = document.getElementById('searchInput').value;
+                if (query) {
+                    const host = window.location.origin;
+
+                    if (isProxyMode) {
+                        // プロキシモードがオンのときの処理
+                        const url = "https://google.com/search?q=" + encodeURIComponent(query);
+                        window.location.href = `${host}/proxy/${url}`;
+                    } else {
+                        // 通常の処理
+                        window.location.href = `${host}/search?q=${encodeURIComponent(query)}`;
+                    }
+                }
+            }
+        }
+
+        // デプロイオーバーレイの表示
+        document.getElementById('deployButton').onclick = function() {
+            document.getElementById('deployOverlay').style.display = 'flex';
+        };
+
+        // デプロイオーバーレイの閉じる
+        function closeOverlay() {
+            document.getElementById('deployOverlay').style.display = 'none';
+        }
+
+        // URLリストボタンの処理
+        document.getElementById('urlListButton').onclick = function() {
+            window.location.href = '/list';
+        };
+
+        // ボタンの処理
+        document.getElementById('proxyButton').onclick = function() {
+            window.location.href = '/byeschool';
+        };
+        
+        // ボタンの処理
+        document.getElementById('uvproxyButton').onclick = function() {
+            window.location.href = '/ultra';
+        };
+
+        // ボタンの処理
+        document.getElementById('uvproxyButton').onclick = function() {
+            window.location.href = '/static';
+        };
+        // オープンチャットボタンの処理
+        document.getElementById('shadowButton').onclick = function() {
+            window.location.href = '/shadow';
+        };
+
+        // AIボタンの処理
+        document.getElementById('aiButton').onclick = function() {
+            window.location.href = '/ai';
+        };
+
+        // GoogleProxyボタンの処理
+        document.getElementById('googleButton').onclick = function() {
+            window.location.href = '/youtube';
+        };
+    </script>
+
+    <p>↑Donate to the developer↑</p>
+    <p>© 2024 FulickFusion mino_hobby. Use of this site for personal gain is prohibited.</p>
+    <div id="cookie-notice" class="cookie-notice">
+        上のアプリで私とコミュニケーションをとりましょう！<br>
+        <button id="accept-btn" onclick="acceptCookies()">同意する</button>
+        <button id="reject-btn" onclick="rejectCookies()">拒否する</button>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
