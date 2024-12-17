@@ -8,12 +8,7 @@
   ],
   "routes": [
     {
-      "src": "/unblock",
-      "methods": ["POST"],
-      "dest": "school.py"
-    },
-    {
-      "src": "/",
+      "src": "/(.*)",
       "dest": "school.py"
     }
   ]
