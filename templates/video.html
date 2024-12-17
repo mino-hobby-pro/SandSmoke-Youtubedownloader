@@ -1,36 +1,99 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ video.title }}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>動画視聴</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    #video-player {
+      max-width: 100%;
+      margin-top: 10px;
+    }
+    #loading-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      color: black;
+      padding: 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      text-align: center;
+      display: none;
+    }
+  </style>
 </head>
 <body>
-    <h1>{{ video.title }}</h1>
-    <p>作者: {{ video.author }}</p>
-    <p>再生時間: {{ video.length_text }}</p>
-    <p>視聴回数: {{ video.view_count }}</p>
-    <p>いいね数: {{ video.like_count }}</p>
-    <p>購読者数: {{ video.subscribers_count }}</p>
-    <div>
-        <h2>ストリームURL</h2>
-        <ul>
-            {% for url in video.video_urls %}
-                <li><a href="{{ url }}">{{ url }}</a></li>
-            {% endfor %}
-        </ul>
-    </div>
-    <div>
-        <h2>おすすめ動画</h2>
-        <ul>
-            {% for video in recommended_videos %}
-                <li><a href="/watch/{{ video.id }}">{{ video.title }}</a></li>
-            {% endfor %}
-        </ul>
-    </div>
-    <div>
-        <h2>説明</h2>
-        <div>{{ video.description_html|safe }}</div>
-    </div>
+  <h2>動画視聴</h2>
+  <div id="loading-popup">取得中...</div>
+  <div>
+    <video id="video-player" controls>
+      <source id="video-source" type="video/mp4">
+      お使いのブラウザは動画の再生をサポートしていません。
+    </video>
+  </div>
+  <div id="video-info">
+    <h3>動画情報</h3>
+    <p><strong>タイトル:</strong> <span id="title"></span></p>
+    <p><strong>再生回数:</strong> <span id="views"></span></p>
+    <p><strong>高評価数:</strong> <span id="likes"></span></p>
+    <p><strong>公開日時:</strong> <span id="published"></span></p>
+    <pre id="description"></pre>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const videoId = new URLSearchParams(window.location.search).get("videoId");
+      if (videoId) {
+        fetchVideoData(videoId);
+      } else {
+        alert("動画IDが指定されていません。");
+      }
+    });
+
+    async function fetchVideoData(videoId) {
+      const apiUrl = `https://script.google.com/macros/s/AKfycbxYjOWULjin5kpp-NcjjjGujVX3wy1TEJVUR2AZtR6-5c_q7GBr1Nctl2_Kat4lSboD/exec?videoId=api/v1/videos/${videoId}`;
+      const loadingPopup = document.getElementById("loading-popup");
+      loadingPopup.style.display = "block";
+
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error("APIリクエストに失敗しました");
+        }
+        const data = await response.json();
+        displayResults(data);
+      } catch (error) {
+        alert(`エラー: ${error.message}`);
+      } finally {
+        loadingPopup.style.display = "none";
+      }
+    }
+
+    function displayResults(data) {
+      document.getElementById("title").textContent = data.title || "不明";
+      document.getElementById("views").textContent = data.viewCount || "不明";
+      document.getElementById("likes").textContent = data.likeCount || "不明";
+      document.getElementById("published").textContent = data.publishedText || "不明";
+      document.getElementById("description").textContent = data.description || "なし";
+
+      const videoSource = document.getElementById("video-source");
+      const formatStreams = data.formatStreams || [];
+      const streamUrl = formatStreams.length > 0 ? formatStreams[0].url : null;
+
+      if (streamUrl) {
+        videoSource.src = streamUrl;
+        document.getElementById("video-player").load();
+      } else {
+        alert("ストリームURLが見つかりませんでした。");
+      }
+    }
+  </script>
 </body>
 </html>
