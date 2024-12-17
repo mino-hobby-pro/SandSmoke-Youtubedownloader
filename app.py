@@ -23,6 +23,13 @@ def search(q: str, request: Request, page: int = 1):
     results = response.json()
     return templates.TemplateResponse("search.html", {"request": request, "results": results, "query": q})
 
+@app.get("/watch/{video_id}", response_class=HTMLResponse)
+def list_page(response: Response, request: Request):
+    # Cookieのチェックをしないため、承諾していない場合でもアクセス可能
+    # 必要に応じてデータを取得
+    # ここでは単純にhtmlを返す
+    return template("video.html", {"request": request})
+
 
 @app.get("/watch/{video_id}", response_class=HTMLResponse)
 def watch(video_id: str, request: Request):
