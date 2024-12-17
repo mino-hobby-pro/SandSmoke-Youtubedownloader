@@ -1,20 +1,17 @@
-from flask import Flask, request, Response, render_template
-import requests
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+import httpx
 
-app = Flask(__name__)
+app = FastAPI()
+templates = Jinja2Templates(directory="templates")
 
-@app.route('/')
-def home():
-    return render_template('home.html')
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse("home.html", {"request": request})
 
-@app.route('/unblock', methods=['POST'])
-def unblock():
-    url = request.form['url']
-    try:
-        response = requests.get(url)
-        return Response(response.content, status=response.status_code, headers=dict(response.headers))
-    except requests.exceptions.RequestException as e:
-        return str(e), 500
-
-if __name__ == '__main__':
-    app.run(debug=True)
+@app.get("/unblocker")
+async def unblock(request: Request, url: str):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+        return HTMLResponse(content=response.text, status_code=response.status_code)
