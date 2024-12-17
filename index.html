@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebUnblocker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, button {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>WebUnblocker</h1>
+<p>ブロックされたウェブサイトのURLを入力してください。</p>
+<input type="text" id="urlInput" placeholder="URLを入力..." />
+<button id="fetchButton">取得</button>
+
+<h2>結果:</h2>
+<pre id="result"></pre>
+
+<script>
+    document.getElementById('fetchButton').addEventListener('click', async () => {
+        const url = document.getElementById('urlInput').value;
+        const resultElement = document.getElementById('result');
+
+        if (!url) {
+            resultElement.textContent = 'URLを入力してください。';
+            return;
+        }
+
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                mode: 'cors', // CORSモードを指定
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTPエラー: ${response.status}`);
+            }
+
+            const data = await response.text();
+            resultElement.textContent = data;
+        } catch (error) {
+            resultElement.textContent = `エラー: ${error.message}`;
+        }
+    });
+</script>
+
+</body>
+</html>
