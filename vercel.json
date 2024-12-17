@@ -1,15 +1,20 @@
 {
-    "version": 2,
-    "builds": [
-        {
-            "src": "main.py",
-            "use": "@vercel/python"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "main.py"
-        }
-    ]
+  "version": 2,
+  "builds": [
+    {
+      "src": "school.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/unblock",
+      "methods": ["POST"],
+      "dest": "school.py"
+    },
+    {
+      "src": "/",
+      "dest": "school.py"
+    }
+  ]
 }
