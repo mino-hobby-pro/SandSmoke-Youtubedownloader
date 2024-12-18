@@ -35,6 +35,14 @@
 
 <h1>API Health Checker</h1>
 <div id="loading">取得中...</div>
+<div>
+    <h3>チェックするAPIを選択</h3>
+    <div id="apiSelection"></div>
+</div>
+<button id="checkSelected">選択したAPIをチェック</button>
+<button id="checkAll">全APIを再チェック</button>
+<button id="downloadCsv">結果をCSVでダウンロード</button>
+<p id="lastChecked"></p>
 <table>
     <thead>
         <tr>
@@ -42,6 +50,8 @@
             <th>応答時間 (ms)</th>
             <th>ステータス</th>
             <th>エラーメッセージ</th>
+            <th>レスポンス内容</th>
+            <th>リトライ</th>
         </tr>
     </thead>
     <tbody id="results">
@@ -52,62 +62,113 @@
 
 <script>
     const apiUrls = [
-    { name: "Invidious", url: "https://invidious.nerdvpn.de/" },
-    { name: "わかめTube", url: "https://ludicrous-wonderful-temple.glitch.me/" },
-    { name: "わかめTube", url: "https://free-sudden-kiss.glitch.me/" },
-    { name: "わかめTube", url: "https://wakame02m.glitch.me/" },
-    { name: "わかめTube", url: "https://natural-voltaic-titanium.glitch.me/" },
-    { name: "わかめTube", url: "https://watawatawata.glitch.me/" },
-    { name: "Google Script 1", url: "https://script.google.com/macros/s/AKfycbxic9NV_JbKs1Ia4m5yw6z7nAZjkQ0mjZ2FGi29ZtLMhX9R6JSEO6jZBuXpNyWHCuRy/exec?videoId=" },
-    { name: "Google Script 2", url: "https://script.google.com/macros/s/AKfycbzDTu2EJQrGPPU-YS3EFarXbfh9zGB1zR9ky-9AunHl7Yp3Gq83rh1726JYjxbjbEsB/exec?videoId=" },
-    { name: "Google Script 3", url: "https://script.google.com/macros/s/AKfycbw43HTKJe0khOM3h5lrRbWw2OUONcbQCsnSry7F6c_1bPdtxVjTUotm1_XY2KfqMLWT/exec?videoId=" },
-    { name: "Google Script 4", url: "https://script.google.com/macros/s/AKfycbxYjOWULjin5kpp-NcjjjGujVX3wy1TEJVUR2AZtR6-5c_q7GBr1Nctl2_Kat4lSboD/exec?videoId=" },
-    { name: "Invidious", url: "https://invidious.jing.rocks/" },
-    { name: "Invidious", url: "https://inv.nadeko.net/" },
-    { name: "Invidious", url: "https://inv.vern.cc/" },
-    { name: "Invidious", url: "https://inv.zzls.xyz/" },
-    { name: "Invidious", url: "https://invi.susurrando.com/" },
-    { name: "Invidious", url: "https://invidious.epicsite.xyz/" },
-    { name: "Invidious", url: "https://invidious.esmailelbob.xyz/" },
-    { name: "Invidious", url: "https://invidious.garudalinux.org/" },
-    { name: "Invidious", url: "https://invidious.kavin.rocks/" },
-    { name: "Invidious", url: "https://invidious.lidarshield.cloud/" },
-    { name: "Invidious", url: "https://invidious.lunar.icu/" },
-    { name: "Invidious", url: "https://yt-us.discard.no/" },
-    { name: "Invidious", url: "https://invidious.nerdvpn.de/" }
+        { name: "Invidious", url: "https://invidious.nerdvpn.de/" },
+        { name: "わかめTube", url: "https://ludicrous-wonderful-temple.glitch.me/" },
+        { name: "わかめTube", url: "https://free-sudden-kiss.glitch.me/" },
+        { name: "わかめTube", url: "https://wakame02m.glitch.me/" },
+        { name: "わかめTube", url: "https://natural-voltaic-titanium.glitch.me/" },
+        { name: "わかめTube", url: "https://watawatawata.glitch.me/" },
+        { name: "Google Script 1", url: "https://script.google.com/macros/s/AKfycbxic9NV_JbKs1Ia4m5yw6z7nAZjkQ0mjZ2FGi29ZtLMhX9R6JSEO6jZBuXpNyWHCuRy/exec?videoId=" },
+        { name: "Google Script 2", url: "https://script.google.com/macros/s/AKfycbzDTu2EJQrGPPU-YS3EFarXbfh9zGB1zR9ky-9AunHl7Yp3Gq83rh1726JYjxbjbEsB/exec?videoId=" },
+        { name: "Google Script 3", url: "https://script.google.com/macros/s/AKfycbw43HTKJe0khOM3h5lrRbWw2OUONcbQCsnSry7F6c_1bPdtxVjTUotm1_XY2KfqMLWT/exec?videoId=" },
+        { name: "Google Script 4", url: "https://script.google.com/macros/s/AKfycbxYjOWULjin5kpp-NcjjjGujVX3wy1TEJVUR2AZtR6-5c_q7GBr1Nctl2_Kat4lSboD/exec?videoId=" },
+        { name: "Invidious", url: "https://invidious.jing.rocks/" },
+        { name: "Invidious", url: "https://inv.nadeko.net/" }
     ];
+
+    const results = [];
+
+    function createApiSelection() {
+        const apiSelectionDiv = document.getElementById('apiSelection');
+        apiUrls.forEach((api, index) => {
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `api-${index}`;
+            checkbox.value = index;
+
+            const label = document.createElement('label');
+            label.htmlFor = `api-${index}`;
+            label.innerText = api.name;
+
+            apiSelectionDiv.appendChild(checkbox);
+            apiSelectionDiv.appendChild(label);
+            apiSelectionDiv.appendChild(document.createElement('br'));
+        });
+    }
 
     async function checkApiHealth(api) {
         const startTime = performance.now();
         let errorMessage = '';
+        let responseContent = '';
         try {
             const response = await fetch(api.url);
             const endTime = performance.now();
             const duration = Math.round(endTime - startTime);
             const status = response.ok ? "正常" : "エラー";
+            responseContent = await response.text();
             if (!response.ok) {
                 errorMessage = `ステータスコード: ${response.status}`;
             }
-            return { name: api.name, duration, status, errorMessage };
+            return { name: api.name, duration, status, errorMessage, responseContent };
         } catch (error) {
             const endTime = performance.now();
             const duration = Math.round(endTime - startTime);
             errorMessage = error.message || 'ネットワークエラー';
-            return { name: api.name, duration, status: "エラー", errorMessage };
+            return { name: api.name, duration, status: "エラー", errorMessage, responseContent: '-' };
         }
+    }
+
+    async function checkSelectedApis() {
+        document.getElementById('loading').style.display = 'block';
+        let healthyCount = 0;
+        results.length = 0; // 結果をリセット
+
+        const selectedApis = [...document.querySelectorAll('input[type="checkbox"]:checked')].map(checkbox => apiUrls[checkbox.value]);
+
+        for (const api of selectedApis) {
+            const result = await checkApiHealth(api);
+            results.push(result);
+            const { name, duration, status, errorMessage, responseContent } = result;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${name}</td>
+                <td>${duration}</td>
+                <td>${status}</td>
+                <td class="${status === 'エラー' ? 'error' : ''}">${errorMessage || '-'}</td>
+                <td><pre>${responseContent.substring(0, 100)}...</pre></td>
+                <td><button onclick="retryApi('${name}')">リトライ</button></td>
+            `;
+            document.getElementById('results').appendChild(row);
+
+            if (status === "正常") healthyCount++;
+        }
+
+        const healthPercentage = Math.round((healthyCount / selectedApis.length) * 100);
+        document.getElementById('healthStatus').innerText = `API ヘルス: ${healthPercentage}%`;
+        document.getElementById('lastChecked').innerText = `最終チェック時間: ${new Date().toLocaleString()}`;
+        document.getElementById('loading').style.display = 'none';
     }
 
     async function checkAllApis() {
         document.getElementById('loading').style.display = 'block';
         let healthyCount = 0;
+        results.length = 0; // 結果をリセット
 
-        // 各APIの健康状態をチェックし、結果を即座に表示
         for (const api of apiUrls) {
             const result = await checkApiHealth(api);
-            const { name, duration, status, errorMessage } = result;
+            results.push(result);
+            const { name, duration, status, errorMessage, responseContent } = result;
 
             const row = document.createElement('tr');
-            row.innerHTML = `<td>${name}</td><td>${duration}</td><td>${status}</td><td class="${status === 'エラー' ? 'error' : ''}">${errorMessage || '-'}</td>`;
+            row.innerHTML = `
+                <td>${name}</td>
+                <td>${duration}</td>
+                <td>${status}</td>
+                <td class="${status === 'エラー' ? 'error' : ''}">${errorMessage || '-'}</td>
+                <td><pre>${responseContent.substring(0, 100)}...</pre></td>
+                <td><button onclick="retryApi('${name}')">リトライ</button></td>
+            `;
             document.getElementById('results').appendChild(row);
 
             if (status === "正常") healthyCount++;
@@ -115,11 +176,52 @@
 
         const healthPercentage = Math.round((healthyCount / apiUrls.length) * 100);
         document.getElementById('healthStatus').innerText = `API ヘルス: ${healthPercentage}%`;
+        document.getElementById('lastChecked').innerText = `最終チェック時間: ${new Date().toLocaleString()}`;
         document.getElementById('loading').style.display = 'none';
     }
 
-    checkAllApis();
+    function retryApi(apiName) {
+        const api = apiUrls.find(api => api.name === apiName);
+        if (api) {
+            checkApiHealth(api).then(result => {
+                const { name, duration, status, errorMessage, responseContent } = result;
+                const row = [...document.querySelectorAll('#results tr')].find(tr => tr.cells[0].innerText === name);
+                if (row) {
+                    row.cells[1].innerText = duration;
+                    row.cells[2].innerText = status;
+                    row.cells[3].innerText = errorMessage || '-';
+                    row.cells[4].innerHTML = `<pre>${responseContent.substring(0, 100)}...</pre>`;
+                }
+            });
+        }
+    }
+
+    function downloadCsv() {
+        const csvRows = [];
+        csvRows.push(['API 名称', '応答時間 (ms)', 'ステータス', 'エラーメッセージ', 'レスポンス内容']);
+
+        results.forEach(result => {
+            const { name, duration, status, errorMessage, responseContent } = result;
+            csvRows.push([name, duration, status, errorMessage || '-', responseContent.substring(0, 100)]);
+        });
+
+        const csvString = csvRows.map(row => row.join(',')).join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'api_health_check_results.csv');
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('checkSelected').onclick = checkSelectedApis;
+    document.getElementById('checkAll').onclick = checkAllApis;
+    document.getElementById('downloadCsv').onclick = downloadCsv;
+
+    createApiSelection(); // チェックボックスを生成
 </script>
 
 </body>
 </html>
+
