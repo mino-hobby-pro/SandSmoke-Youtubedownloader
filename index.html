@@ -21,15 +21,21 @@
         th {
             background-color: #f2f2f2;
         }
+        #loading {
+            display: none;
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
 
 <h1>API Health Checker</h1>
+<div id="loading">取得中...</div>
 <table>
     <thead>
         <tr>
-            <th>API URL</th>
+            <th>API 名称</th>
             <th>応答時間 (ms)</th>
             <th>ステータス</th>
         </tr>
@@ -38,39 +44,48 @@
         <!-- 結果を追加するよお -->
     </tbody>
 </table>
+<p id="healthStatus"></p>
 
 <script>
     const apiUrls = [
-        "https://invidious.nerdvpn.de/",
-        "https://script.google.com/macros/s/AKfycbxic9NV_JbKs1Ia4m5yw6z7nAZjkQ0mjZ2FGi29ZtLMhX9R6JSEO6jZBuXpNyWHCuRy/exec?videoId=",
-        "https://script.google.com/macros/s/AKfycbzDTu2EJQrGPPU-YS3EFarXbfh9zGB1zR9ky-9AunHl7Yp3Gq83rh1726JYjxbjbEsB/exec?videoId=",
-        "https://script.google.com/macros/s/AKfycbw43HTKJe0khOM3h5lrRbWw2OUONcbQCsnSry7F6c_1bPdtxVjTUotm1_XY2KfqMLWT/exec?videoId=",
-        "https://script.google.com/macros/s/AKfycbxYjOWULjin5kpp-NcjjjGujVX3wy1TEJVUR2AZtR6-5c_q7GBr1Nctl2_Kat4lSboD/exec?videoId="
+        { name: "Invidious", url: "https://invidious.nerdvpn.de/" },
+        { name: "Google Script 1", url: "https://script.google.com/macros/s/AKfycbxic9NV_JbKs1Ia4m5yw6z7nAZjkQ0mjZ2FGi29ZtLMhX9R6JSEO6jZBuXpNyWHCuRy/exec?videoId=" },
+        { name: "Google Script 2", url: "https://script.google.com/macros/s/AKfycbzDTu2EJQrGPPU-YS3EFarXbfh9zGB1zR9ky-9AunHl7Yp3Gq83rh1726JYjxbjbEsB/exec?videoId=" },
+        { name: "Google Script 3", url: "https://script.google.com/macros/s/AKfycbw43HTKJe0khOM3h5lrRbWw2OUONcbQCsnSry7F6c_1bPdtxVjTUotm1_XY2KfqMLWT/exec?videoId=" },
+        { name: "Google Script 4", url: "https://script.google.com/macros/s/AKfycbxYjOWULjin5kpp-NcjjjGujVX3wy1TEJVUR2AZtR6-5c_q7GBr1Nctl2_Kat4lSboD/exec?videoId=" }
     ];
 
-    async function checkApiHealth(url) {
+    async function checkApiHealth(api) {
         const startTime = performance.now();
         try {
-            const response = await fetch(url);
+            const response = await fetch(api.url);
             const endTime = performance.now();
             const duration = Math.round(endTime - startTime);
             const status = response.ok ? "正常" : "エラー";
-            return { url, duration, status };
+            return { name: api.name, duration, status };
         } catch (error) {
             const endTime = performance.now();
             const duration = Math.round(endTime - startTime);
-            return { url, duration, status: "エラー" };
+            return { name: api.name, duration, status: "エラー" };
         }
     }
 
     async function checkAllApis() {
+        document.getElementById('loading').style.display = 'block';
         const results = await Promise.all(apiUrls.map(checkApiHealth));
         const resultsTable = document.getElementById('results');
-        results.forEach(({ url, duration, status }) => {
+        let healthyCount = 0;
+
+        results.forEach(({ name, duration, status }) => {
             const row = document.createElement('tr');
-            row.innerHTML = `<td>${url}</td><td>${duration}</td><td>${status}</td>`;
+            row.innerHTML = `<td>${name}</td><td>${duration}</td><td>${status}</td>`;
             resultsTable.appendChild(row);
+            if (status === "正常") healthyCount++;
         });
+
+        const healthPercentage = Math.round((healthyCount / results.length) * 100);
+        document.getElementById('healthStatus').innerText = `API ヘルス: ${healthPercentage}%`;
+        document.getElementById('loading').style.display = 'none';
     }
 
     checkAllApis();
