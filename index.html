@@ -3,78 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ビデオ情報表示</title>
+    <title>YouTube Video Info</title>
     <style>
+        /* シンプルなスタイル */
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
         }
-        #video-info {
+        #video-player {
+            display: none;
             margin-top: 20px;
-            border: 1px solid #ccc;
-            padding: 10px;
         }
     </style>
 </head>
 <body>
+    <h1>YouTube Video Info</h1>
+    <input type="text" id="video-input" placeholder="YouTubeのURLまたはビデオIDを入力">
+    <button id="fetch-button">情報を取得</button>
+    <div id="overlay" style="display: none;">処理中...</div>
 
-<h1>ビデオ情報表示</h1>
-<input type="text" id="videoId" placeholder="ビデオIDを入力" />
-<button onclick="fetchVideoData()">ビデオ情報取得</button>
+    <h2 id="title"></h2>
+    <div>
+        <a id="stream-url" href="#" target="_blank">ダウンロードURL</a>
+    </div>
+    <video id="video-player" controls>
+        <source id="video-source" src="" type="video/mp4">
+        お使いのブラウザは動画タグをサポートしていません。
+    </video>
+    <p>視聴回数: <span id="views">不明</span></p>
+    <p>いいね数: <span id="likes">不明</span></p>
+    <p>公開日: <span id="published">不明</span></p>
 
-<div id="video-info"></div>
+    <script>
+        const video_apis = [
+            "https://invidious.jing.rocks/",
+            "https://invidious.nerdvpn.de/",
+            "https://script.google.com/macros/s/AKfycbxic9NV_JbKs1Ia4m5yw6z7nAZjkQ0mjZ2FGi29ZtLMhX9R6JSEO6jZBuXpNyWHCuRy/exec?videoId=",
+            "https://script.google.com/macros/s/AKfycbzDTu2EJQrGPPU-YS3EFarXbfh9zGB1zR9ky-9AunHl7Yp3Gq83rh1726JYjxbjbEsB/exec?videoId=",
+            "https://script.google.com/macros/s/AKfycbw43HTKJe0khOM3h5lrRbWw2OUONcbQCsnSry7F6c_1bPdtxVjTUotm1_XY2KfqMLWT/exec?videoId=",
+            "https://script.google.com/macros/s/AKfycbxYjOWULjin5kpp-NcjjjGujVX3wy1TEJVUR2AZtR6-5c_q7GBr1Nctl2_Kat4lSboD/exec?videoId="
+        ];
 
-<script>
-    const videoAPIs = [
-        "https://invidious.jing.rocks/api/v1/videos/",
-        "https://invidious.nerdvpn.de/api/v1/videos/",
-        "https://script.google.com/macros/s/AKfycbxic9NV_JbKs1Ia4m5yw6z7nAZjkQ0mjZ2FGi29ZtLMhX9R6JSEO6jZBuXpNyWHCuRy/exec?videoId=",
-        "https://script.google.com/macros/s/AKfycbzDTu2EJQrGPPU-YS3EFarXbfh9zGB1zR9ky-9AunHl7Yp3Gq83rh1726JYjxbjbEsB/exec?videoId=",
-        "https://script.google.com/macros/s/AKfycbw43HTKJe0khOM3h5lrRbWw2OUONcbQCsnSry7F6c_1bPdtxVjTUotm1_XY2KfqMLWT/exec?videoId=",
-        "https://script.google.com/macros/s/AKfycbxYjOWULjin5kpp-NcjjjGujVX3wy1TEJVUR2AZtR6-5c_q7GBr1Nctl2_Kat4lSboD/exec?videoId="
-    ];
-
-    async function fetchVideoData() {
-        const videoId = document.getElementById('videoId').value;
-        const videoInfoDiv = document.getElementById('video-info');
-        videoInfoDiv.innerHTML = "読み込み中...";
-
-        for (let api of videoAPIs) {
-            try {
-                const response = await fetch(api + encodeURIComponent(videoId));
-                if (response.ok) {
-                    const data = await response.json();
-                    displayVideoData(data);
-                    return;
-                } else {
-                    console.error(`エラー: ${response.status}`);
-                }
-            } catch (error) {
-                console.error(`タイムアウト: ${api}`, error);
+        document.getElementById("fetch-button").addEventListener("click", async () => {
+            const input = document.getElementById("video-input").value;
+            const videoId = extractVideoId(input);
+            if (!videoId) {
+                alert("無効なビデオIDまたはURLです");
+                return;
             }
+
+            updateUrlWithVideoId(videoId);
+            document.getElementById("overlay").style.display = "block";
+
+            for (const apiUrl of video_apis) {
+                try {
+                    const response = await fetch(apiUrl + videoId);
+                    if (!response.ok) {
+                        throw new Error("APIリクエストに失敗しました");
+                    }
+                    const data = await response.json();
+                    displayResults(data);
+                    break; // 成功したらループを抜ける
+                } catch (error) {
+                    console.error(`Error fetching from ${apiUrl}: ${error.message}`);
+                }
+            }
+
+            document.getElementById("overlay").style.display = "none";
+        });
+
+        function extractVideoId(input) {
+            const videoIdPattern = /^[a-zA-Z0-9_-]{11}$/;
+            const urlPattern = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/.*[?&]v=([a-zA-Z0-9_-]{11})|youtu\.be\/([a-zA-Z0-9_-]{11})/;
+
+            if (videoIdPattern.test(input)) {
+                return input;
+            }
+
+            const urlMatch = input.match(urlPattern);
+            if (urlMatch) {
+                return urlMatch[1] || urlMatch[2];
+            }
+
+            return null;
         }
 
-        videoInfoDiv.innerHTML = "ビデオ情報を取得できませんでした。";
-    }
+        function updateUrlWithVideoId(videoId) {
+            const currentUrl = new URL(window.location.href);
+            currentUrl.pathname = `/mino/api/videoid/${videoId}`;
+            window.history.pushState(null, "", currentUrl);
+        }
 
-    function displayVideoData(data) {
-        const videoInfoDiv = document.getElementById('video-info');
-        videoInfoDiv.innerHTML = `
-            <h2>${data.title}</h2>
-            <p><strong>作者:</strong> ${data.author}</p>
-            <p><strong>視聴回数:</strong> ${data.viewCount}</p>
-            <p><strong>説明:</strong> ${data.descriptionHtml}</p>
-            <p><strong>関連動画:</strong></p>
-            <ul>
-                ${data.recommendedVideos.map(video => `<li>${video.title} (ID: ${video.id})</li>`).join('')}
-            </ul>
-            <p><strong>ストリームURL:</strong></p>
-            <ul>
-                ${data.formatStreams.map(stream => `<li>${stream.url}</li>`).join('')}
-            </ul>
-        `;
-    }
-</script>
+        function displayResults(data) {
+            document.getElementById("title").textContent = data.title || "タイトル不明";
 
+            const formatStreams = data.formatStreams || [];
+            const streamUrl = formatStreams.length > 0 ? formatStreams[0].url : null;
+
+            const streamLink = document.getElementById("stream-url");
+            const videoPlayer = document.getElementById("video-player");
+            const videoSource = document.getElementById("video-source");
+
+            if (streamUrl) {
+                streamLink.href = streamUrl;
+                streamLink.textContent = "ダウンロードURL";
+
+                videoSource.src = streamUrl;
+                videoPlayer.style.display = "block";
+                videoPlayer.load();
+            } else {
+                streamLink.textContent = "映像付きストリームが見つかりません";
+                streamLink.href = "#";
+                videoPlayer.style.display = "none";
+            }
+
+            document.getElementById("views").textContent = data.viewCount || "不明";
+            document.getElementById("likes").textContent = data.likeCount || "不明";
+            document.getElementById("published").textContent = data.publishedText || "不明";
+        }
+    </script>
 </body>
 </html>
