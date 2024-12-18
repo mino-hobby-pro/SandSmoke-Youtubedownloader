@@ -26,6 +26,9 @@
             font-size: 20px;
             margin-bottom: 20px;
         }
+        .error {
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -38,6 +41,7 @@
             <th>API 名称</th>
             <th>応答時間 (ms)</th>
             <th>ステータス</th>
+            <th>エラーメッセージ</th>
         </tr>
     </thead>
     <tbody id="results">
@@ -57,28 +61,37 @@
 
     async function checkApiHealth(api) {
         const startTime = performance.now();
+        let errorMessage = '';
         try {
             const response = await fetch(api.url);
             const endTime = performance.now();
             const duration = Math.round(endTime - startTime);
             const status = response.ok ? "正常" : "エラー";
-            return { name: api.name, duration, status };
+            if (!response.ok) {
+                errorMessage = `ステータスコード: ${response.status}`;
+            }
+            return { name: api.name, duration, status, errorMessage };
         } catch (error) {
             const endTime = performance.now();
             const duration = Math.round(endTime - startTime);
-            return { name: api.name, duration, status: "エラー" };
+            errorMessage = error.message || 'ネットワークエラー';
+            return { name: api.name, duration, status: "エラー", errorMessage };
         }
     }
 
     async function checkAllApis() {
         document.getElementById('loading').style.display = 'block';
         const results = await Promise.all(apiUrls.map(checkApiHealth));
+        
+        // 応答時間でソート
+        results.sort((a, b) => a.duration - b.duration);
+
         const resultsTable = document.getElementById('results');
         let healthyCount = 0;
 
-        results.forEach(({ name, duration, status }) => {
+        results.forEach(({ name, duration, status, errorMessage }) => {
             const row = document.createElement('tr');
-            row.innerHTML = `<td>${name}</td><td>${duration}</td><td>${status}</td>`;
+            row.innerHTML = `<td>${name}</td><td>${duration}</td><td>${status}</td><td class="${status === 'エラー' ? 'error' : ''}">${errorMessage || '-'}</td>`;
             resultsTable.appendChild(row);
             if (status === "正常") healthyCount++;
         });
