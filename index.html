@@ -81,22 +81,21 @@
 
     async function checkAllApis() {
         document.getElementById('loading').style.display = 'block';
-        const results = await Promise.all(apiUrls.map(checkApiHealth));
-        
-        // 応答時間でソート
-        results.sort((a, b) => a.duration - b.duration);
-
-        const resultsTable = document.getElementById('results');
         let healthyCount = 0;
 
-        results.forEach(({ name, duration, status, errorMessage }) => {
+        // 各APIの健康状態をチェックし、結果を即座に表示
+        for (const api of apiUrls) {
+            const result = await checkApiHealth(api);
+            const { name, duration, status, errorMessage } = result;
+
             const row = document.createElement('tr');
             row.innerHTML = `<td>${name}</td><td>${duration}</td><td>${status}</td><td class="${status === 'エラー' ? 'error' : ''}">${errorMessage || '-'}</td>`;
-            resultsTable.appendChild(row);
-            if (status === "正常") healthyCount++;
-        });
+            document.getElementById('results').appendChild(row);
 
-        const healthPercentage = Math.round((healthyCount / results.length) * 100);
+            if (status === "正常") healthyCount++;
+        }
+
+        const healthPercentage = Math.round((healthyCount / apiUrls.length) * 100);
         document.getElementById('healthStatus').innerText = `API ヘルス: ${healthPercentage}%`;
         document.getElementById('loading').style.display = 'none';
     }
