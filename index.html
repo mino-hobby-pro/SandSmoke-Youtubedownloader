@@ -3,128 +3,352 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Health Checker</title>
+    <title>SandSmoke</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-image: url('https://tse4.mm.bing.net/th?id=OIG4.gDAHAlmQD0nqjGKj5ehr&pid=ImgGn');
+            background-size: cover;
+            background-position: center;
+            color: #fff;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        h1 {
+            font-size: 2.5rem;
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
         }
-        th {
-            background-color: #f2f2f2;
+        .top-bar button {
+            padding: 5px 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px;
         }
-        #loading {
+        input[type="text"] {
+            width: 60%;
+            padding: 10px;
+            font-size: 1.5rem;
+            margin-top: 20px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+        }
+        .icon-container {
+            display: flex;
+            margin-top: 20px;
+        }
+        .icon {
+            margin: 0 10px;
+            cursor: pointer;
+        }
+        .icon img {
+            width: 60px;
+            height: 60px;
+        }
+        .cookie-notice {
             display: none;
-            font-size: 20px;
-            margin-bottom: 20px;
         }
-        .error {
-            color: red;
+        .toggle-proxy, .launch-rammerhead, .deploy-button {
+            padding: 5px 10px;
+            font-size: 1.5rem;
+            margin-top: 20px;
+            cursor: pointer;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        .overlay-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            color: black;
+        }
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            z-index: 20;
+        }
+        .bottom-bar button {
+            padding: 5px 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            margin: 0 10px;
+        }
+        .stats {
+            margin-top: 20px;
+            font-size: 1.5rem;
         }
     </style>
 </head>
 <body>
 
-<h1>API Health Checker</h1>
-<div id="loading">取得中...</div>
-<table>
-    <thead>
-        <tr>
-            <th>API 名称</th>
-            <th>応答時間 (ms)</th>
-            <th>ステータス</th>
-            <th>エラーメッセージ</th>
-        </tr>
-    </thead>
-    <tbody id="results">
-        <!-- 結果を追加するよお -->
-    </tbody>
-</table>
-<p id="healthStatus"></p>
-<p id="advice" style="margin-top: 20px; font-weight: bold;"></p>
+    <div class="top-bar">
+        <button id="urlListButton">URLリスト</button>
+        <button id="openChatButton">オープンチャット</button>
+        <button id="shadowButton">New Shadow proxy</button>
+        <button id="uvproxyButton">New Croxy proxy</button>
+        <button id="proxyButton">New rammer proxy</button>
+        <button class="deploy-button" id="deployButton">デプロイ</button>
+    </div>
 
-<script>
-    const apiUrls = [
-        { name: "Invidious", url: "https://invidious.nerdvpn.de/" },
-        { name: "わかめTube", url: "https://ludicrous-wonderful-temple.glitch.me/" },
-        { name: "わかめTube", url: "https://free-sudden-kiss.glitch.me/" },
-        { name: "わかめTube", url: "https://wakame02m.glitch.me/" },
-        { name: "わかめTube", url: "https://natural-voltaic-titanium.glitch.me/" },
-        { name: "わかめTube", url: "https://watawatawata.glitch.me/" },
-        { name: "Google Script 1", url: "https://script.google.com/macros/s/AKfycbxic9NV_JbKs1Ia4m5yw6z7nAZjkQ0mjZ2FGi29ZtLMhX9R6JSEO6jZBuXpNyWHCuRy/exec?videoId=" },
-        { name: "Google Script 2", url: "https://script.google.com/macros/s/AKfycbzDTu2EJQrGPPU-YS3EFarXbfh9zGB1zR9ky-9AunHl7Yp3Gq83rh1726JYjxbjbEsB/exec?videoId=" },
-        { name: "Google Script 3", url: "https://script.google.com/macros/s/AKfycbw43HTKJe0khOM3h5lrRbWw2OUONcbQCsnSry7F6c_1bPdtxVjTUotm1_XY2KfqMLWT/exec?videoId=" },
-        { name: "Google Script 4", url: "https://script.google.com/macros/s/AKfycbxYjOWULjin5kpp-NcjjjGujVX3wy1TEJVUR2AZtR6-5c_q7GBr1Nctl2_Kat4lSboD/exec?videoId=" },
-        { name: "Invidious", url: "https://invidious.jing.rocks/" },
-        { name: "Invidious", url: "https://inv.nadeko.net/" }
-    ];
+    <h1>SandSmoke V1.5</h1>
 
-    async function checkApiHealth(api) {
-        const startTime = performance.now();
-        let errorMessage = '';
-        try {
-            const response = await fetch(api.url);
-            const endTime = performance.now();
-            const duration = Math.round(endTime - startTime);
-            const status = response.ok ? "正常" : "エラー";
-            if (!response.ok) {
-                errorMessage = `ステータスコード: ${response.status}`;
+    <button class="toggle-proxy" id="proxyToggle">proxy: OFF</button>
+    <button class="launch-rammerhead" id="rammerheadButton">Rammerhead</button>
+
+    <input type="text" id="searchInput" placeholder="SandSmoke" onkeypress="handleKeyPress(event)">
+
+    <div class="icon-container">
+        <div class="icon" id="icon1">
+            <img src="" alt="アイコン1" id="iconImage">
+        </div>
+        <div class="icon" onclick="window.open('https://scratch.mit.edu/users/proxy_minotaur_sab/')">
+            <img src="https://msp.c.yimg.jp/images/v2/FUTi93tXq405grZVGgDqG-UPEpGiUmLUvyTKINe5lrNdRrjsrxgVfr6wDMN0CLStbOKDqIoK81ZNmgvECDtOsdoWq87mx26qcpoQ1Pyrkl-_YPIH2YqrFYEDm9aR47DL4Vcar6RZDjaWvdw-zxvVnPF9U3e9_-UBuNrgEtdaPyygeyyNMzUFMat_WeATdfpD/919846.png?errorImage=false" alt="アイコン2">
+        </div>
+        <div class="icon" onclick="window.open('https://discord.gg/8nedA5ZYy8')">
+            <img src="https://msp.c.yimg.jp/images/v2/FUTi93tXq405grZVGgDqG9Pf23FWtdraDrlKE3uxUVuTwRJocD6VOjpjR_24iE4PkjAVt9nHenCu29bq5KhEbHiXGA0QKbxQAUESJEOy_ZeLPw4aS5i0AX4GyF1Thzxze-yw8YUpBfq8NMIXYs8UMiaAwnGfyOCJrCqr5cQA5jhIBS7J42UhoQrmyAOaKyRT/discord-icon.svg?errorImage=false" alt="アイコン3">
+        </div>
+        <div class="icon" onclick="window.open('https://www.chatwork.com/g/web-of-the-library')">
+            <img src="https://msp.c.yimg.jp/images/v2/FUTi93tXq405grZVGgDqG-UPEpGiUmLUvyTKINe5lrNdRrjsrxgVfr6wDMN0CLStomoytCTiQIHfIHZkRhmIYcsxVcXcFX4a1T2gXecRU8S_YPIH2YqrFYEDm9aR47DL4Vcar6RZDjaWvdw-zxvVnMOanpNJMoCQ7p8f1hpaYM1IbtxeaXFLpB1RD21E3qzg/906366.png?errorImage=false" alt="アイコン4">
+        </div>
+        <div class="icon" onclick="window.open('https://github.com/mino-hobby-pro')">
+            <img src="https://img.icons8.com/?size=256&id=52539&format=png" alt="アイコン5">
+        </div>
+    </div>
+
+    <div class="overlay" id="deployOverlay">
+        <div class="overlay-content">
+            <h2>デプロイオプション</h2>
+            <p>以下のボタンをクリックして、各プラットフォームにデプロイできます。renderによるホストを強くお勧めします。</p>
+            <a href="https://vercel.com/import/project?template=https://github.com/mino-hobby-pro/sand-smoke-proxy" target="_blank">
+                <img src="https://vercel.com/button" alt="Deploy to Vercel" />
+            </a>
+            <a href="https://koyeb.com/deploy?type=github&repository=https://github.com/mino-hobby-pro/sand-smoke-proxy" target="_blank">
+                <img src="https://www.koyeb.com/static/images/deploy/button.svg" alt="Deploy to Koyeb" />
+            </a>
+            <a href="https://render.com/deploy?repo=https://github.com/mino-hobby-pro/sand-smoke-proxy" target="_blank">
+                <img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" />
+            </a>
+            <button onclick="closeOverlay()">閉じる</button>
+        </div>
+    </div>
+
+    <canvas id="sandstormCanvas"></canvas>
+
+    <div class="bottom-bar">
+        <button id="aiButton">SandSmokeAI-SSA！</button>
+        <button id="googleButton">おすすめ最強GoogleProxy</button>
+        <button id="healthButton">設定　health</button>
+        <button id="tellButton">運営からのお知らせ</button>
+    </div>
+
+    <div class="stats" id="stats">
+        <p>合計アクセス回数: <span id="totalVisits">0</span></p>
+        <p>同時アクセス数: <span id="activeUsers">0</span></p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCFtCV9OP-oJqrzVaTqvuRkLD4GW2Hhhc0",
+            authDomain: "sandsmoke-79dca.firebaseapp.com",
+            databaseURL: "https://sandsmoke-79dca-default-rtdb.firebaseio.com",
+            projectId: "sandsmoke-79dca",
+            storageBucket: "sandsmoke-79dca.firebasestorage.app",
+            messagingSenderId: "61141711489",
+            appId: "1:61141711489:web:a1d074c6f9e6a3ecd26b80",
+            measurementId: "G-C8FH5PFNEP"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // アクセス回数の管理
+        const totalVisitsRef = ref(database, 'totalVisits');
+        const activeUsersRef = ref(database, 'activeUsers');
+
+        // 合計アクセス回数と同時アクセス数を表示する関数
+        function updateStats() {
+            onValue(totalVisitsRef, (snapshot) => {
+                const totalVisits = snapshot.val() || 0;
+                document.getElementById('totalVisits').textContent = totalVisits;
+            });
+
+            onValue(activeUsersRef, (snapshot) => {
+                const activeUsers = snapshot.val() || 0;
+                document.getElementById('activeUsers').textContent = activeUsers;
+            });
+        }
+
+        updateStats();
+        
+        // アイコンのURLを取得
+        const iconImage = document.getElementById('iconImage');
+        fetch('https://raw.githubusercontent.com/mino-hobby-pro/invidious-google-mod/refs/heads/main/png.txt')
+            .then(response => response.text())
+            .then(data => {
+                const urls = data.split('\n');
+                iconImage.src = urls[0]; // 最初のURLを設定
+            })
+            .catch(error => console.error('アイコンを取得中にエラーが発生しました:', error));
+
+        const canvas = document.getElementById('sandstormCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        function drawSandstorm() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(222, 184, 135, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < 100; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 5 + 1;
+                ctx.fillStyle = 'rgba(222, 184, 135, 0.1)';
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
             }
-            return { name: api.name, duration, status, errorMessage };
-        } catch (error) {
-            const endTime = performance.now();
-            const duration = Math.round(endTime - startTime);
-            errorMessage = error.message || 'ネットワークエラー';
-            return { name: api.name, duration, status: "エラー", errorMessage };
-        }
-    }
-
-    function generateAdvice(healthyCount) {
-        const totalApis = apiUrls.length;
-        const healthPercentage = Math.round((healthyCount / totalApis) * 100);
-
-        if (healthPercentage === 100) {
-            return "すべてのAPIが正常です！システムは問題なく動作しています。引き続き良好な状態を維持してください。";
-        } else if (healthPercentage >= 80) {
-            return "ほとんどのAPIが正常です。軽微な問題があるかもしれませんが、全体的には安定しています。定期的なチェックを続けてください。";
-        } else if (healthPercentage >= 50) {
-            return "半数以上のAPIが正常ですが、いくつかのエラーが発生しています。特にエラーが発生しているAPIの詳細を確認し、必要に応じて対応してください。";
-        } else {
-            return "多くのAPIがエラーを返しています。システムの健全性を確保するためには、エラーの原因を調査し、必要に応じて修正を行う必要があります。";
-        }
-    }
-
-    async function checkAllApis() {
-        document.getElementById('loading').style.display = 'block';
-        let healthyCount = 0;
-
-        for (const api of apiUrls) {
-            const result = await checkApiHealth(api);
-            const { name, duration, status, errorMessage } = result;
-
-            const row = document.createElement('tr');
-            row.innerHTML = `<td>${name}</td><td>${duration}</td><td>${status}</td><td class="${status === 'エラー' ? 'error' : ''}">${errorMessage || '-'}</td>`;
-            document.getElementById('results').appendChild(row);
-
-            if (status === "正常") healthyCount++;
+            requestAnimationFrame(drawSandstorm);
         }
 
-        document.getElementById('healthStatus').innerText = `API ヘルス: ${Math.round((healthyCount / apiUrls.length) * 100)}%`;
-        document.getElementById('advice').innerText = generateAdvice(healthyCount);
-        document.getElementById('loading').style.display = 'none';
-    }
+        drawSandstorm();
 
-    checkAllApis();
-</script>
+        document.getElementById('proxyToggle').onclick = function() {
+            isProxyMode = !isProxyMode;
+            this.textContent = `プロキシ: ${isProxyMode ? 'ON' : 'OFF'}`;
+        };
 
+        document.getElementById('rammerheadButton').onclick = function() {
+            const link = prompt("URLを入力してください 読み込みには時間がかかります:");
+            if (link) {
+                const proxy = 'https://api.codetabs.com/v1/proxy?quest=';
+                fetch(proxy + link)
+                    .then((response) => response.text())
+                    .then((text) => document.write(text))
+                    .catch((error) => alert("エラーが発生しました: " + error));
+            }
+        };
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                const query = document.getElementById('searchInput').value;
+                if (query) {
+                    const host = window.location.origin;
+
+                    if (isProxyMode) {
+                        const url = "https://google.com/search?q=" + encodeURIComponent(query);
+                        window.location.href = `${host}/proxy/${url}`;
+                    } else {
+                        window.location.href = `${host}/search?q=${encodeURIComponent(query)}`;
+                    }
+                }
+            }
+        }
+
+        document.getElementById('deployButton').onclick = function() {
+            document.getElementById('deployOverlay').style.display = 'flex';
+        };
+
+        function closeOverlay() {
+            document.getElementById('deployOverlay').style.display = 'none';
+        }
+
+        document.getElementById('urlListButton').onclick = function() {
+            window.location.href = '/list';
+        };
+
+        document.getElementById('proxyButton').onclick = function() {
+            window.location.href = '/byeschool';
+        };
+
+        document.getElementById('uvproxyButton').onclick = function() {
+            window.location.href = '/ultra';
+        };
+
+        document.getElementById('shadowButton').onclick = function() {
+            window.location.href = '/shadow';
+        };
+
+        document.getElementById('aiButton').onclick = function() {
+            window.location.href = '/ai';
+        };
+
+        document.getElementById('healthButton').onclick = function() {
+            window.location.href = '/health';
+        };
+
+        document.getElementById('tellButton').onclick = function() {
+            window.location.href = '/tell';
+        };
+
+        document.getElementById('googleButton').onclick = function() {
+            window.location.href = '/youtube';
+        };
+    </script>
+
+    <p>↑Donate to the developer↑</p>
+    <p>© 2024 FulickFusion mino_hobby. Use of this site for personal gain is prohibited.</p>
+    <div id="cookie-notice" class="cookie-notice">
+        上のアプリで私とコミュニケーションをとりましょう！<br>
+        <button id="accept-btn" onclick="acceptCookies()">同意する</button>
+        <button id="reject-btn" onclick="rejectCookies()">拒否する</button>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
-
