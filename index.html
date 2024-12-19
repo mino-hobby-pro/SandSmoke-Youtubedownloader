@@ -44,7 +44,7 @@
         }
         .counter-card {
             position: fixed;
-            top: 20px;
+            top: 80px; /* 初期値重 */
             right: 20px;
             background-color: rgba(255, 255, 255, 0.8);
             color: black;
@@ -52,8 +52,8 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
             z-index: 30;
-            width: 200px; /* サイズを固定 */
-            cursor: move; /* ドラッグできることを示す */
+            width: 200px;
+            cursor: move;
         }
         input[type="text"] {
             width: 60%;
@@ -139,7 +139,6 @@
         }
     </style>
     <script type="module">
-        // Firebase 初期化コード
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
@@ -367,7 +366,6 @@
             window.location.href = '/youtube';
         };
 
-        // ドラッグ機能を追加
         const counterCard = document.getElementById('counterCard');
         let offsetX, offsetY;
 
@@ -388,7 +386,7 @@
             document.removeEventListener('mouseup', mouseUpHandler);
         }
 
-        counterCard.style.position = 'fixed'; // カードの位置を固定
+        counterCard.style.position = 'fixed';
     </script>
 
     <p>↑Donate to the developer↑</p>
