@@ -124,10 +124,6 @@
             border-radius: 5px;
             margin: 0 10px;
         }
-        .stats {
-            margin-top: 20px;
-            font-size: 1.5rem;
-        }
     </style>
 </head>
 <body>
@@ -150,7 +146,7 @@
 
     <div class="icon-container">
         <div class="icon" id="icon1">
-            <img src="" alt="アイコン1" id="iconImage">
+            <img src="" alt="アイコン1" id="icon1-img">
         </div>
         <div class="icon" onclick="window.open('https://scratch.mit.edu/users/proxy_minotaur_sab/')">
             <img src="https://msp.c.yimg.jp/images/v2/FUTi93tXq405grZVGgDqG-UPEpGiUmLUvyTKINe5lrNdRrjsrxgVfr6wDMN0CLStbOKDqIoK81ZNmgvECDtOsdoWq87mx26qcpoQ1Pyrkl-_YPIH2YqrFYEDm9aR47DL4Vcar6RZDjaWvdw-zxvVnPF9U3e9_-UBuNrgEtdaPyygeyyNMzUFMat_WeATdfpD/919846.png?errorImage=false" alt="アイコン2">
@@ -192,58 +188,8 @@
         <button id="tellButton">運営からのお知らせ</button>
     </div>
 
-    <div class="stats" id="stats">
-        <p>合計アクセス回数: <span id="totalVisits">0</span></p>
-        <p>同時アクセス数: <span id="activeUsers">0</span></p>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
-        
-        const firebaseConfig = {
-            apiKey: "AIzaSyCFtCV9OP-oJqrzVaTqvuRkLD4GW2Hhhc0",
-            authDomain: "sandsmoke-79dca.firebaseapp.com",
-            databaseURL: "https://sandsmoke-79dca-default-rtdb.firebaseio.com",
-            projectId: "sandsmoke-79dca",
-            storageBucket: "sandsmoke-79dca.firebasestorage.app",
-            messagingSenderId: "61141711489",
-            appId: "1:61141711489:web:a1d074c6f9e6a3ecd26b80",
-            measurementId: "G-C8FH5PFNEP"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-
-        // アクセス回数の管理
-        const totalVisitsRef = ref(database, 'totalVisits');
-        const activeUsersRef = ref(database, 'activeUsers');
-
-        // 合計アクセス回数と同時アクセス数を表示する関数
-        function updateStats() {
-            onValue(totalVisitsRef, (snapshot) => {
-                const totalVisits = snapshot.val() || 0;
-                document.getElementById('totalVisits').textContent = totalVisits;
-            });
-
-            onValue(activeUsersRef, (snapshot) => {
-                const activeUsers = snapshot.val() || 0;
-                document.getElementById('activeUsers').textContent = activeUsers;
-            });
-        }
-
-        updateStats();
-        
-        // アイコンのURLを取得
-        const iconImage = document.getElementById('iconImage');
-        fetch('https://raw.githubusercontent.com/mino-hobby-pro/invidious-google-mod/refs/heads/main/png.txt')
-            .then(response => response.text())
-            .then(data => {
-                const urls = data.split('\n');
-                iconImage.src = urls[0]; // 最初のURLを設定
-            })
-            .catch(error => console.error('アイコンを取得中にエラーが発生しました:', error));
-
+    <script>
+        let isProxyMode = false;
         const canvas = document.getElementById('sandstormCanvas');
         const ctx = canvas.getContext('2d');
 
@@ -321,6 +267,10 @@
             window.location.href = '/ultra';
         };
 
+        document.getElementById('uvproxyButton').onclick = function() {
+            window.location.href = '/static';
+        };
+
         document.getElementById('shadowButton').onclick = function() {
             window.location.href = '/shadow';
         };
@@ -329,7 +279,7 @@
             window.location.href = '/ai';
         };
 
-        document.getElementById('healthButton').onclick = function() {
+         document.getElementById('healthButton').onclick = function() {
             window.location.href = '/health';
         };
 
@@ -340,6 +290,19 @@
         document.getElementById('googleButton').onclick = function() {
             window.location.href = '/youtube';
         };
+
+        // アイコン1のURLを取得して表示
+        fetch('https://raw.githubusercontent.com/mino-hobby-pro/invidious-google-mod/refs/heads/main/png.txt')
+            .then(response => response.text())
+            .then(text => {
+                const urls = text.split('\n').filter(url => url.trim() !== ''); // 空行を除去
+                const icon1Img = document.getElementById('icon1-img');
+                if (urls.length > 0) {
+                    icon1Img.src = urls[0]; // 最初のURLをアイコン1に設定
+                }
+            })
+            .catch(error => console.error('エラーが発生しました:', error));
+
     </script>
 
     <p>↑Donate to the developer↑</p>
