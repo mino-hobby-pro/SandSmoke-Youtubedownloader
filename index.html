@@ -44,7 +44,7 @@
         }
         .counter-card {
             position: fixed;
-            top: 80px; /* 位置を少し下にずらす */
+            top: 20px;
             right: 20px;
             background-color: rgba(255, 255, 255, 0.8);
             color: black;
@@ -52,7 +52,8 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
             z-index: 30;
-            cursor: move; /* ドラッグ可能であることを示す */
+            width: 200px; /* サイズを固定 */
+            cursor: move; /* ドラッグできることを示す */
         }
         input[type="text"] {
             width: 60%;
@@ -138,6 +139,7 @@
         }
     </style>
     <script type="module">
+        // Firebase 初期化コード
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
         import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
@@ -196,28 +198,6 @@
         }
 
         window.onload = incrementAccessCount;
-
-        // ドラッグ機能を追加
-        const counterCard = document.querySelector('.counter-card');
-        let isDragging = false;
-        let offsetX, offsetY;
-
-        counterCard.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            offsetX = e.clientX - counterCard.getBoundingClientRect().left;
-            offsetY = e.clientY - counterCard.getBoundingClientRect().top;
-        });
-
-        window.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                counterCard.style.left = `${e.clientX - offsetX}px`;
-                counterCard.style.top = `${e.clientY - offsetY}px`;
-            }
-        });
-
-        window.addEventListener('mouseup', () => {
-            isDragging = false;
-        });
 
     </script>
 </head>
@@ -283,7 +263,7 @@
         <button id="tellButton">運営からのお知らせ</button>
     </div>
 
-    <div class="counter-card">
+    <div class="counter-card" id="counterCard">
         <div id="todayAccessCount">今日のアクセス数: 0</div>
         <div id="totalAccessCount">総アクセス数: 0</div>
     </div>
@@ -386,6 +366,29 @@
         document.getElementById('googleButton').onclick = function() {
             window.location.href = '/youtube';
         };
+
+        // ドラッグ機能を追加
+        const counterCard = document.getElementById('counterCard');
+        let offsetX, offsetY;
+
+        counterCard.addEventListener('mousedown', function(e) {
+            offsetX = e.clientX - counterCard.getBoundingClientRect().left;
+            offsetY = e.clientY - counterCard.getBoundingClientRect().top;
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+        });
+
+        function mouseMoveHandler(e) {
+            counterCard.style.left = (e.clientX - offsetX) + 'px';
+            counterCard.style.top = (e.clientY - offsetY) + 'px';
+        }
+
+        function mouseUpHandler() {
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+        }
+
+        counterCard.style.position = 'fixed'; // カードの位置を固定
     </script>
 
     <p>↑Donate to the developer↑</p>
