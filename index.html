@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>アクセス数カウンター</title>
+    <title>アクセスカウンター</title>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 
-        // Firebaseの設定
         const firebaseConfig = {
             apiKey: "AIzaSyCFtCV9OP-oJqrzVaTqvuRkLD4GW2Hhhc0",
             authDomain: "sandsmoke-79dca.firebaseapp.com",
@@ -20,36 +19,43 @@
             measurementId: "G-C8FH5PFNEP"
         };
 
-        // Firebaseの初期化
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
 
-        // アクセス数を記録する関数
-        function logAccess() {
-            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD形式
-            const accessRef = ref(database, 'accessCounts/' + today);
-            onValue(accessRef, (snapshot) => {
-                const currentCount = snapshot.val() ? snapshot.val().count : 0;
-                const newCount = currentCount + 1; // アクセス数を1増やす
-                set(accessRef, { count: newCount });
-                displayCount(newCount);
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD形式
+        const counterRef = ref(database, `accessCount/${today}`);
+
+        // アクセス数を1増やす
+        function incrementAccessCount() {
+            get(counterRef).then((snapshot) => {
+                let currentCount = snapshot.exists() ? snapshot.val().count : 0;
+                currentCount++;
+
+                set(counterRef, { count: currentCount })
+                    .then(() => {
+                        console.log('アクセス数が更新されました:', currentCount);
+                        displayAccessCount(currentCount);
+                    })
+                    .catch((error) => {
+                        console.error('データの書き込みに失敗しました:', error);
+                    });
+            }).catch((error) => {
+                console.error('データの取得に失敗しました:', error);
             });
         }
 
-        // アクセス数を表示する関数
-        function displayCount(count) {
-            document.getElementById('accessCount').innerText = `本日のアクセス数: ${count}`;
+        // アクセス数を表示
+        function displayAccessCount(count) {
+            document.getElementById('accessCount').textContent = `今日のアクセス数: ${count}`;
         }
 
-        // ページが読み込まれたらアクセスを記録
-        window.onload = () => {
-            logAccess();
-        };
+        // ページが読み込まれた際にアクセス数を増やす
+        window.onload = incrementAccessCount;
+
     </script>
 </head>
 <body>
-    <h1>アクセス数カウンター</h1>
-    <div id="accessCount">本日のアクセス数: 0</div>
+    <h1>アクセスカウンター</h1>
+    <div id="accessCount">今日のアクセス数: 0</div>
 </body>
 </html>
-
