@@ -44,7 +44,7 @@
         }
         .counter-card {
             position: fixed;
-            top: 20px;
+            top: 80px; /* 位置を少し下にずらす */
             right: 20px;
             background-color: rgba(255, 255, 255, 0.8);
             color: black;
@@ -52,6 +52,7 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
             z-index: 30;
+            cursor: move; /* ドラッグ可能であることを示す */
         }
         input[type="text"] {
             width: 60%;
@@ -195,6 +196,28 @@
         }
 
         window.onload = incrementAccessCount;
+
+        // ドラッグ機能を追加
+        const counterCard = document.querySelector('.counter-card');
+        let isDragging = false;
+        let offsetX, offsetY;
+
+        counterCard.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            offsetX = e.clientX - counterCard.getBoundingClientRect().left;
+            offsetY = e.clientY - counterCard.getBoundingClientRect().top;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                counterCard.style.left = `${e.clientX - offsetX}px`;
+                counterCard.style.top = `${e.clientY - offsetY}px`;
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
 
     </script>
 </head>
