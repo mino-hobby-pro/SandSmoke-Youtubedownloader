@@ -267,10 +267,6 @@
             window.location.href = '/ultra';
         };
 
-        document.getElementById('uvproxyButton').onclick = function() {
-            window.location.href = '/static';
-        };
-
         document.getElementById('shadowButton').onclick = function() {
             window.location.href = '/shadow';
         };
@@ -279,7 +275,7 @@
             window.location.href = '/ai';
         };
 
-         document.getElementById('healthButton').onclick = function() {
+        document.getElementById('healthButton').onclick = function() {
             window.location.href = '/health';
         };
 
@@ -291,14 +287,13 @@
             window.location.href = '/youtube';
         };
 
-        // アイコン1のURLを取得して表示
         fetch('https://raw.githubusercontent.com/mino-hobby-pro/invidious-google-mod/refs/heads/main/png.txt')
             .then(response => response.text())
             .then(text => {
-                const urls = text.split('\n').filter(url => url.trim() !== ''); // 空行を除去
+                const urls = text.split('\n').filter(url => url.trim() !== '');
                 const icon1Img = document.getElementById('icon1-img');
                 if (urls.length > 0) {
-                    icon1Img.src = urls[0]; // 最初のURLをアイコン1に設定
+                    icon1Img.src = urls[0];
                 }
             })
             .catch(error => console.error('エラーが発生しました:', error));
@@ -312,6 +307,5 @@
         <button id="accept-btn" onclick="acceptCookies()">同意する</button>
         <button id="reject-btn" onclick="rejectCookies()">拒否する</button>
     </div>
-    <script src="script.js"></script>
 </body>
 </html>
